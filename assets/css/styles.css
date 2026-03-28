@@ -78,6 +78,9 @@ img {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.footer a {
   max-height: 30px;
 }
 
