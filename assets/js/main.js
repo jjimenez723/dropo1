@@ -15,9 +15,9 @@ const submitTimeoutMs =
     ? Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs)
     : 10000;
 const webhookMap = {
-  "newsletter-subscribe": webhookConfig.newsletterSubscribe,
-  "general-contact": webhookConfig.generalContact,
-  "designer-intake": webhookConfig.designerIntake,
+  "newsletter-subscribe": normalizeWebhookUrl(webhookConfig.newsletterSubscribe),
+  "general-contact": normalizeWebhookUrl(webhookConfig.generalContact),
+  "designer-intake": normalizeWebhookUrl(webhookConfig.designerIntake),
 };
 
 // The SVG notes live in /dropo1. Using import.meta.url keeps the paths correct
@@ -282,6 +282,28 @@ function clearFormFeedback(form) {
   const slot = form.querySelector("[data-form-feedback]");
   if (slot) {
     slot.remove();
+  }
+}
+
+function normalizeWebhookUrl(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes("your-n8n-domain")) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "";
+    }
+
+    return trimmed;
+  } catch {
+    return "";
   }
 }
 
@@ -1094,7 +1116,7 @@ async function setupNoticeBoardHero() {
     }
 
     gsap.fromTo(
-      hero.querySelectorAll(".hero__headline, .hero__legend, .hero-note-form"),
+      hero.querySelectorAll(".hero__headline, .hero-note-form"),
       { autoAlpha: 0, y: 20 },
       {
         autoAlpha: 1,

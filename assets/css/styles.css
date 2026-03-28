@@ -383,14 +383,12 @@ button {
 }
 
 .hero__overlay,
-.hero__legend,
 .hero-note-form {
   position: relative;
   z-index: 2;
 }
 
 .hero__overlay,
-.hero__legend,
 .hero__headline,
 .hero__subscribe-card,
 .hero-note-form {
@@ -494,31 +492,6 @@ button {
 .hero__subscribe-card strong {
   font-size: clamp(1.55rem, 2.4vw, 2.1rem);
   line-height: 0.92;
-}
-
-.hero__legend {
-  position: absolute;
-  left: clamp(24px, 4vw, 42px);
-  top: clamp(24px, 4vw, 42px);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: min(520px, calc(100% - 84px));
-  align-items: flex-start;
-}
-
-.hero__legend span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 38px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.74rem;
 }
 
 .hero-note-form {
@@ -1333,7 +1306,6 @@ body.is-dragging-notice-board {
   .hero__overlay,
   .hero__headline,
   .hero__subscribe-card,
-  .hero__legend,
   .hero-note-form,
   .hero-note-form label,
   .hero-note-form__status {
@@ -1376,13 +1348,6 @@ body.is-dragging-notice-board {
 
   .hero__kicker {
     font-size: clamp(2rem, 9vw, 3rem);
-  }
-
-  .hero__legend {
-    left: 22px;
-    right: 22px;
-    top: 22px;
-    max-width: none;
   }
 
   .hero__subscribe-card,
@@ -1446,20 +1411,8 @@ body.is-dragging-notice-board {
     line-height: 1.38;
   }
 
-  .hero__legend {
-    left: 14px;
-    right: 14px;
-    top: 14px;
-    gap: 8px;
-  }
-
   .hero__overlay {
     padding-top: clamp(148px, 40vw, 220px);
-  }
-
-  .hero__legend span {
-    width: 100%;
-    justify-content: center;
   }
 
   .hero-note-form {

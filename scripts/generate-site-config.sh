@@ -20,9 +20,28 @@ escape_js_string() {
   printf '%s' "${1:-}" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
-NEWSLETTER_URL=$(escape_js_string "${DROP01_N8N_NEWSLETTER_SUBSCRIBE_WEBHOOK_URL:-}")
-CONTACT_URL=$(escape_js_string "${DROP01_N8N_GENERAL_CONTACT_WEBHOOK_URL:-}")
-DESIGNER_URL=$(escape_js_string "${DROP01_N8N_DESIGNER_INTAKE_WEBHOOK_URL:-}")
+normalize_webhook_url() {
+  value=${1:-}
+
+  case "$value" in
+    "" | *your-n8n-domain*)
+      printf '%s' ""
+      return
+      ;;
+    http://* | https://*)
+      printf '%s' "$value"
+      return
+      ;;
+    *)
+      printf '%s' ""
+      return
+      ;;
+  esac
+}
+
+NEWSLETTER_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_NEWSLETTER_SUBSCRIBE_WEBHOOK_URL:-}")")
+CONTACT_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_GENERAL_CONTACT_WEBHOOK_URL:-}")")
+DESIGNER_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_DESIGNER_INTAKE_WEBHOOK_URL:-}")")
 TIMEOUT_MS=${DROP01_FORM_SUBMIT_TIMEOUT_MS:-10000}
 
 cat > "$OUTPUT_FILE" <<EOF
