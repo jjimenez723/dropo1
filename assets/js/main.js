@@ -260,6 +260,7 @@ async function submitWebhookForm(form) {
     return;
   }
 
+  syncCustomFieldValidation(form);
   if (!form.reportValidity()) {
     return;
   }
@@ -375,6 +376,24 @@ function normalizeWebhookUrl(value) {
   } catch {
     return "";
   }
+}
+
+function validateSimpleUrlField(field) {
+  if (!(field instanceof HTMLInputElement) || !field.hasAttribute("data-simple-url")) {
+    return true;
+  }
+
+  const trimmed = field.value.trim();
+  const isValid = trimmed === "" || trimmed.includes(".");
+
+  field.setCustomValidity(isValid ? "" : "Enter a link with a dot, like studio.com.");
+  return isValid;
+}
+
+function syncCustomFieldValidation(scope = document) {
+  $$("[data-simple-url]", scope).forEach((field) => {
+    validateSimpleUrlField(field);
+  });
 }
 
 function buildFormPayload(form, webhookKey) {
@@ -911,6 +930,13 @@ function setupMultiStepForm() {
   const indicators = $$("[data-step-marker]");
   let currentStep = 0;
 
+  form.addEventListener("input", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) {
+      validateSimpleUrlField(target);
+    }
+  });
+
   function renderStep(nextStep) {
     currentStep = Math.max(0, Math.min(nextStep, steps.length - 1));
     steps.forEach((step, index) => {
@@ -944,6 +970,9 @@ function setupMultiStepForm() {
         (field) => !field.disabled
       );
 
+      currentStepFields.forEach((field) => {
+        validateSimpleUrlField(field);
+      });
       const isValid = currentStepFields.every((field) => field.checkValidity());
       if (!isValid) {
         const firstInvalid = currentStepFields.find((field) => !field.checkValidity());

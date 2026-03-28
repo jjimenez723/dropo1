@@ -163,7 +163,18 @@
               </div>
               <div class="field">
                 <label for="designer-portfolio">Portfolio or studio link</label>
-                <input id="designer-portfolio" name="portfolio" type="url" placeholder="https://your-portfolio.com" required />
+                <input
+                  id="designer-portfolio"
+                  name="portfolio"
+                  type="text"
+                  inputmode="url"
+                  autocomplete="url"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  placeholder="your-portfolio.com"
+                  data-simple-url
+                  required
+                />
               </div>
               <div class="field">
                 <label for="designer-location">Studio location</label>
