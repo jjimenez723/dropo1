@@ -14,13 +14,15 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="page-home">
     <header class="site-header">
       <div class="site-header__inner">
         <a class="brand" href="index.html">
-          <strong>DROP 01</strong>
+          <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
           <span>Designer-Led Fashion Platform</span>
         </a>
         <nav class="site-nav" aria-label="Primary">
@@ -63,7 +65,11 @@
             <aside class="hero__subscribe-card" data-delayed-subscribe hidden>
               <span>Join us today</span>
               <strong>Subscribe for exclusive drops, atelier notes, and first access.</strong>
-              <form class="mini-form" data-demo-form="subscribe">
+              <form
+                class="mini-form"
+                data-webhook-form="newsletter-subscribe"
+                data-success-message="You are on the list for the next limited release."
+              >
                 <div class="field">
                   <label for="hero-subscribe-email">Email address</label>
                   <input
@@ -115,7 +121,11 @@
             shaping the platform.
           </p>
         </div>
-        <form class="subscribe-form" data-demo-form="subscribe">
+        <form
+          class="subscribe-form"
+          data-webhook-form="newsletter-subscribe"
+          data-success-message="You are on the list for the next limited release."
+        >
           <div class="field">
             <label for="subscribe-email">Email address</label>
             <input id="subscribe-email" name="email" type="email" placeholder="your@email.com" required />
@@ -359,7 +369,11 @@
         <p class="body-copy">
           Early access, studio dispatches, and quiet previews before the public launch window.
         </p>
-        <form class="mini-form" data-demo-form="subscribe">
+        <form
+          class="mini-form"
+          data-webhook-form="newsletter-subscribe"
+          data-success-message="You are on the list for the next limited release."
+        >
           <div class="field">
             <label for="modal-email">Email address</label>
             <input id="modal-email" name="email" type="email" placeholder="your@email.com" required />
@@ -369,6 +383,8 @@
       </div>
     </div>
 
+    <script src="assets/js/site-config.js"></script>
+    <script src="assets/js/site-config.local.js"></script>
     <script type="module" src="assets/js/main.js"></script>
   </body>
 </html>

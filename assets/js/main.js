@@ -8,6 +8,17 @@ gsap.registerPlugin(ScrollTrigger);
 // home page boots an isolated Three.js scene for the physical notice board.
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+const siteConfig = window.DROP01_SITE_CONFIG || {};
+const webhookConfig = siteConfig.webhooks || {};
+const submitTimeoutMs =
+  Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs) > 0
+    ? Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs)
+    : 10000;
+const webhookMap = {
+  "newsletter-subscribe": webhookConfig.newsletterSubscribe,
+  "general-contact": webhookConfig.generalContact,
+  "designer-intake": webhookConfig.designerIntake,
+};
 
 // The SVG notes live in /dropo1. Using import.meta.url keeps the paths correct
 // even though the module itself sits under assets/js.
@@ -26,6 +37,7 @@ const assetUrls = {
 init();
 
 function init() {
+  setupHeaderMotion();
   setupRevealAnimations();
   setupButtonMotion();
   setupForms();
@@ -34,6 +46,101 @@ function init() {
   setupFloatingSubscribeCard();
   setupMultiStepForm();
   setupNoticeBoardHero();
+}
+
+function setupHeaderMotion() {
+  const header = document.querySelector(".site-header");
+  if (!header) {
+    return;
+  }
+
+  if (prefersReducedMotion) {
+    return;
+  }
+
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+  let isHidden = false;
+  const revealThreshold = 18;
+  const hideThreshold = 120;
+
+  const setHeaderVisible = () => {
+    if (!isHidden) {
+      gsap.to(header, {
+        yPercent: 0,
+        autoAlpha: 1,
+        backgroundColor: "rgba(255, 255, 255, 0.82)",
+        boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
+        duration: 0.7,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+      return;
+    }
+
+    isHidden = false;
+    header.classList.remove("is-hidden");
+    gsap.to(header, {
+      yPercent: 0,
+      autoAlpha: 1,
+      backgroundColor: "rgba(255, 255, 255, 0.82)",
+      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
+      duration: 0.7,
+      ease: "power3.out",
+      overwrite: "auto",
+    });
+  };
+
+  const setHeaderHidden = () => {
+    if (isHidden) {
+      return;
+    }
+
+    isHidden = true;
+    header.classList.add("is-hidden");
+    gsap.to(header, {
+      yPercent: -115,
+      autoAlpha: 0,
+      backgroundColor: "rgba(255, 255, 255, 0.45)",
+      boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
+      duration: 0.58,
+      ease: "power2.inOut",
+      overwrite: "auto",
+    });
+  };
+
+  gsap.set(header, {
+    yPercent: 0,
+    autoAlpha: 1,
+    boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
+  });
+
+  const updateHeaderState = () => {
+    const currentScrollY = window.scrollY;
+    const delta = currentScrollY - lastScrollY;
+
+    if (currentScrollY <= 24) {
+      setHeaderVisible();
+    } else if (delta > revealThreshold && currentScrollY > hideThreshold) {
+      setHeaderHidden();
+    } else if (delta < -revealThreshold) {
+      setHeaderVisible();
+    }
+
+    lastScrollY = currentScrollY;
+    ticking = false;
+  };
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeaderState);
+        ticking = true;
+      }
+    },
+    { passive: true }
+  );
 }
 
 function setupRevealAnimations() {
@@ -90,32 +197,127 @@ function setupButtonMotion() {
   });
 }
 
-function setSuccessMessage(form, message) {
-  let slot = form.querySelector("[data-success]");
+function setFormFeedback(form, message, state = "success") {
+  let slot = form.querySelector("[data-form-feedback]");
   if (!slot) {
     slot = document.createElement("p");
-    slot.className = "success-message";
-    slot.setAttribute("data-success", "");
+    slot.className = "form-feedback";
+    slot.setAttribute("data-form-feedback", "");
+    slot.setAttribute("aria-live", "polite");
     form.appendChild(slot);
   }
+
+  slot.className = `form-feedback is-${state}`;
   slot.textContent = message;
 }
 
 function setupForms() {
-  $$("form[data-demo-form]").forEach((form) => {
-    form.addEventListener("submit", (event) => {
+  $$("form[data-webhook-form]").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const type = form.getAttribute("data-demo-form");
-      const messageMap = {
-        subscribe: "You are on the list for the next limited release.",
-        contact: "Message received. We will reply with next steps within two business days.",
-        designer:
-          "Your designer intake has been staged for review. Expect a follow-up from the curation team soon.",
-      };
-      setSuccessMessage(form, messageMap[type] || "Submission received.");
-      form.reset();
+      await submitWebhookForm(form);
     });
   });
+}
+
+async function submitWebhookForm(form) {
+  const webhookKey = form.getAttribute("data-webhook-form");
+  const webhookUrl = webhookMap[webhookKey];
+  const submitButton = form.querySelector("[type='submit']");
+  const idleLabel = submitButton?.dataset.idleLabel || submitButton?.textContent || "Submit";
+  const successMessage =
+    form.getAttribute("data-success-message") || "Submission received successfully.";
+
+  if (!webhookUrl) {
+    setFormFeedback(
+      form,
+      "This form is not configured yet. Add the matching n8n webhook URL in your site config.",
+      "error"
+    );
+    return;
+  }
+
+  if (!form.reportValidity()) {
+    return;
+  }
+
+  toggleFormSubmitting(form, submitButton, true, idleLabel);
+  clearFormFeedback(form);
+
+  try {
+    const payload = buildFormPayload(form, webhookKey);
+    await postJson(webhookUrl, payload);
+    setFormFeedback(form, successMessage, "success");
+    form.reset();
+  } catch (error) {
+    console.error(`DROP 01 form submission failed for ${webhookKey}.`, error);
+    setFormFeedback(
+      form,
+      "The submission did not go through. Please try again in a moment.",
+      "error"
+    );
+  } finally {
+    toggleFormSubmitting(form, submitButton, false, idleLabel);
+  }
+}
+
+function toggleFormSubmitting(form, submitButton, isSubmitting, idleLabel) {
+  form.classList.toggle("is-submitting", isSubmitting);
+
+  $$("input, select, textarea, button", form).forEach((element) => {
+    if (element instanceof HTMLButtonElement && element.type === "button") {
+      return;
+    }
+
+    element.disabled = isSubmitting;
+  });
+
+  if (submitButton) {
+    submitButton.dataset.idleLabel = idleLabel;
+    submitButton.textContent = isSubmitting ? "Sending..." : idleLabel;
+  }
+}
+
+function clearFormFeedback(form) {
+  const slot = form.querySelector("[data-form-feedback]");
+  if (slot) {
+    slot.remove();
+  }
+}
+
+function buildFormPayload(form, webhookKey) {
+  const formData = new FormData(form);
+  const fields = Object.fromEntries(formData.entries());
+
+  return {
+    formType: webhookKey,
+    page: window.location.pathname.split("/").pop() || "index.html",
+    sourceUrl: window.location.href,
+    submittedAt: new Date().toISOString(),
+    fields,
+  };
+}
+
+async function postJson(url, payload) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), submitTimeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Webhook responded with ${response.status}`);
+    }
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
 
 function updateCountdown(element) {
@@ -331,6 +533,17 @@ function setupMultiStepForm() {
 
     if (target.hasAttribute("data-next")) {
       event.preventDefault();
+      const currentStepFields = $$("input, select, textarea", steps[currentStep]).filter(
+        (field) => !field.disabled
+      );
+
+      const isValid = currentStepFields.every((field) => field.checkValidity());
+      if (!isValid) {
+        const firstInvalid = currentStepFields.find((field) => !field.checkValidity());
+        firstInvalid?.reportValidity();
+        return;
+      }
+
       renderStep(currentStep + 1);
     }
 
@@ -342,12 +555,10 @@ function setupMultiStepForm() {
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    setSuccessMessage(
-      form,
-      "Your drop proposal is in the queue. We will review the portfolio and circle back with fit, timeline, and next production steps."
-    );
-    form.reset();
-    renderStep(0);
+  });
+
+  form.addEventListener("reset", () => {
+    window.setTimeout(() => renderStep(0), 0);
   });
 
   renderStep(0);
@@ -360,6 +571,7 @@ async function setupNoticeBoardHero() {
     return;
   }
 
+  const boardShell = hero.querySelector(".hero__board-shell");
   const noteForm = hero.querySelector("[data-note-form]");
   const noteInput = hero.querySelector("[data-note-input]");
   const noteStatus = hero.querySelector("[data-note-status]");
@@ -405,12 +617,9 @@ async function setupNoticeBoardHero() {
 
   const board = new THREE.Mesh(
     new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshStandardMaterial({
-      color: 0x1d2023,
-      roughness: 1,
-      metalness: 0,
+    new THREE.ShadowMaterial({
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.24,
     })
   );
   board.position.set(0, 0, -8);
@@ -420,8 +629,59 @@ async function setupNoticeBoardHero() {
   const textureLoader = new THREE.TextureLoader();
   const textureCache = new Map();
   const noteMeshes = [];
+  const heroNoteMeshes = new Map();
   const scrollState = { progress: 0, gust: 0 };
+  const scrollResponse = {
+    progressMultiplier: 1.45,
+    scrub: 0.28,
+    gustVelocityDivisor: 1650,
+    gustMultiplier: 1.2,
+    gustResetDelay: 160,
+    xProgressInfluence: 0.28,
+    yProgressInfluence: 1.22,
+    yGustInfluence: 0.4,
+  };
   const view = { halfHeight: 8, halfWidth: 8, height: 16, width: 16 };
+  const heroLineKeys = ["d", "r", "o", "p", "zero", "one", "orange"];
+  const heroNoteRotations = {
+    d: -0.08,
+    r: 0.06,
+    o: -0.05,
+    p: 0.07,
+    zero: -0.04,
+    one: 0.05,
+    orange: -0.14,
+  };
+  const heroLayoutPresets = {
+    desktop: {
+      lineY: 0.62,
+      maxHeight: 0.28,
+      widthFill: 0.8,
+      gap: 0.022,
+      pink: { x: 0.85, y: 0.18, height: 0.24, rotationZ: 0.14, z: 3.02 },
+    },
+    laptop: {
+      lineY: 0.67,
+      maxHeight: 0.24,
+      widthFill: 0.95,
+      gap: 0.018,
+      pink: { x: 0.9, y: 0.78, height: 0.2, rotationZ: 0.12, z: 2.98 },
+    },
+    tablet: {
+      lineY: 0.22,
+      maxHeight: 0.18,
+      widthFill: 0.96,
+      gap: 0.014,
+      pink: { x: 0.88, y: 0.79, height: 0.18, rotationZ: 0.12, z: 2.94 },
+    },
+    mobile: {
+      lineY: 0.2,
+      maxHeight: 0.11,
+      widthFill: 0.98,
+      gap: 0.01,
+      pink: { x: 0.84, y: 0.8, height: 0.16, rotationZ: 0.12, z: 2.9 },
+    },
+  };
 
   // Dragging works by raycasting the pointer into the scene, then intersecting
   // that ray with a plane locked to the selected note's Z position.
@@ -616,58 +876,190 @@ async function setupNoticeBoardHero() {
     }
   }
 
+  function getHeroLayoutPreset() {
+    const width = window.innerWidth;
+    if (width <= 560) {
+      return heroLayoutPresets.mobile;
+    }
+
+    if (width <= 800) {
+      return heroLayoutPresets.tablet;
+    }
+
+    if (width <= 1300) {
+      return heroLayoutPresets.laptop;
+    }
+
+    return heroLayoutPresets.desktop;
+  }
+
+  function getHeroStageRect() {
+    const bounds = boardShell?.getBoundingClientRect() ?? hero.getBoundingClientRect();
+    const styles = window.getComputedStyle(boardShell || hero);
+    const maxInsetX = Math.max(bounds.width * 0.48, 0);
+    const maxInsetY = Math.max(bounds.height * 0.7, 0);
+    const topInset = THREE.MathUtils.clamp(
+      Number.parseFloat(styles.getPropertyValue("--hero-stage-top")) || 0,
+      0,
+      maxInsetY
+    );
+    const rightInset = THREE.MathUtils.clamp(
+      Number.parseFloat(styles.getPropertyValue("--hero-stage-right")) || 0,
+      0,
+      maxInsetX
+    );
+    const bottomInset = THREE.MathUtils.clamp(
+      Number.parseFloat(styles.getPropertyValue("--hero-stage-bottom")) || 0,
+      0,
+      maxInsetY
+    );
+    const leftInset = THREE.MathUtils.clamp(
+      Number.parseFloat(styles.getPropertyValue("--hero-stage-left")) || 0,
+      0,
+      maxInsetX
+    );
+
+    const left = -view.halfWidth + (leftInset / Math.max(bounds.width, 1)) * view.width;
+    const right = view.halfWidth - (rightInset / Math.max(bounds.width, 1)) * view.width;
+    const top = view.halfHeight - (topInset / Math.max(bounds.height, 1)) * view.height;
+    const bottom = -view.halfHeight + (bottomInset / Math.max(bounds.height, 1)) * view.height;
+
+    if (right - left < 4 || top - bottom < 3.5) {
+      return {
+        left: -view.halfWidth * 0.82,
+        right: view.halfWidth * 0.82,
+        top: view.halfHeight * 0.44,
+        bottom: -view.halfHeight * 0.44,
+        width: view.width * 0.82 * 2,
+        height: view.height * 0.44 * 2,
+      };
+    }
+
+    return {
+      left,
+      right,
+      top,
+      bottom,
+      width: right - left,
+      height: top - bottom,
+    };
+  }
+
+  function getStagePoint(stage, xRatio, yRatio) {
+    return {
+      x: stage.left + stage.width * xRatio,
+      y: stage.top - stage.height * yRatio,
+    };
+  }
+
+  function applyHeroNoteLayout() {
+    const stage = getHeroStageRect();
+    const layoutPreset = getHeroLayoutPreset();
+    let maxRestZ = frontZ;
+
+    const totalAspect = heroLineKeys.reduce((sum, key) => {
+      const note = heroNoteMeshes.get(key);
+      if (!note) {
+        return sum;
+      }
+
+      const motion = note.userData.motion;
+      return sum + motion.width / Math.max(motion.height, 0.001);
+    }, 0);
+    const gap = stage.width * layoutPreset.gap;
+    const rowHeight = Math.min(
+      stage.height * layoutPreset.maxHeight,
+      (stage.width * layoutPreset.widthFill - gap * (heroLineKeys.length - 1)) / Math.max(totalAspect, 1)
+    );
+    const totalWidth =
+      rowHeight * totalAspect + gap * (heroLineKeys.length - 1);
+    let cursor = stage.left + (stage.width - totalWidth) / 2;
+    const lineY = stage.top - stage.height * layoutPreset.lineY;
+
+    heroLineKeys.forEach((key, index) => {
+      const note = heroNoteMeshes.get(key);
+      if (!note) {
+        return;
+      }
+
+      const motion = note.userData.motion;
+      const aspect = motion.width / Math.max(motion.height, 0.001);
+      const noteWidth = rowHeight * aspect;
+      const centerX = cursor + noteWidth / 2;
+      const z = 3.5 + index * 0.18;
+      const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
+
+      motion.restX = centerX;
+      motion.restY = lineY;
+      motion.restZ = z;
+      motion.restRotationZ = heroNoteRotations[key] ?? 0;
+
+      note.scale.set(scale, scale, 1);
+      note.renderOrder = Math.round(z * 10);
+
+      if (!motion.isDragging && !motion.isThrowing) {
+        note.position.set(centerX, lineY, z);
+        note.rotation.z = motion.restRotationZ;
+      }
+
+      maxRestZ = Math.max(maxRestZ, z);
+      cursor += noteWidth + gap;
+    });
+
+    const pinkNote = heroNoteMeshes.get("pink");
+    if (pinkNote && layoutPreset.pink) {
+      const motion = pinkNote.userData.motion;
+      const point = getStagePoint(stage, layoutPreset.pink.x, layoutPreset.pink.y);
+      const desiredHeight = stage.height * layoutPreset.pink.height;
+      const scale = desiredHeight / Math.max(motion.baseHeight, 0.001);
+
+      motion.restX = point.x;
+      motion.restY = point.y;
+      motion.restZ = layoutPreset.pink.z;
+      motion.restRotationZ = layoutPreset.pink.rotationZ;
+
+      pinkNote.scale.set(scale, scale, 1);
+      pinkNote.renderOrder = Math.round(layoutPreset.pink.z * 10);
+
+      if (!motion.isDragging && !motion.isThrowing) {
+        pinkNote.position.set(point.x, point.y, layoutPreset.pink.z);
+        pinkNote.rotation.z = layoutPreset.pink.rotationZ;
+      }
+
+      maxRestZ = Math.max(maxRestZ, layoutPreset.pink.z);
+    }
+
+    frontZ = maxRestZ;
+  }
+
   function buildHeroNotes(textures) {
-    // These six letter notes intentionally sit higher in Z so they read as the
-    // central DROP 01 composition over the poster bed.
     const heroConfigs = [
-      { texture: textures.d, height: 3.34, y: -0.42, rotationZ: -0.08 },
-      { texture: textures.r, height: 3.3, y: -0.56, rotationZ: 0.06 },
-      { texture: textures.o, height: 3.36, y: -0.38, rotationZ: -0.05 },
-      { texture: textures.p, height: 3.4, y: -0.5, rotationZ: 0.07 },
-      { texture: textures.zero, height: 3.24, y: -0.4, rotationZ: -0.04 },
-      { texture: textures.one, height: 3.18, y: -0.3, rotationZ: 0.05 },
+      { key: "d", texture: textures.d, height: 3.34 },
+      { key: "r", texture: textures.r, height: 3.3 },
+      { key: "o", texture: textures.o, height: 3.36 },
+      { key: "p", texture: textures.p, height: 3.4 },
+      { key: "zero", texture: textures.zero, height: 3.24 },
+      { key: "one", texture: textures.one, height: 3.18 },
+      { key: "orange", texture: textures.orange, height: 3.15 },
+      { key: "pink", texture: textures.pink, height: 3.04 },
     ];
 
-    const gap = 0.26;
-    const totalWidth =
-      heroConfigs.reduce((sum, config) => sum + config.height * textureAspect(config.texture), 0) +
-      gap * (heroConfigs.length - 1);
-
-    let cursor = -totalWidth / 2;
-
     heroConfigs.forEach((config, index) => {
-      const width = config.height * textureAspect(config.texture);
-      const x = cursor + width / 2;
-      const z = 3.5 + index * 0.18;
-      createNoteMesh({
+      const note = createNoteMesh({
         texture: config.texture,
         height: config.height,
-        x,
-        y: config.y,
-        z,
-        rotationZ: config.rotationZ,
+        x: 0,
+        y: 0,
+        z: 3.4 + index * 0.18,
+        rotationZ: 0,
       });
-      cursor += width + gap;
-      frontZ = Math.max(frontZ, z);
+      const motion = note.userData.motion;
+      motion.baseHeight = config.height;
+      motion.responsive = false;
+      heroNoteMeshes.set(config.key, note);
     });
 
-    createNoteMesh({
-      texture: textures.orange,
-      height: 3.15,
-      x: -view.halfWidth * 0.5,
-      y: -2.38,
-      z: 2.95,
-      rotationZ: -0.16,
-    });
-
-    createNoteMesh({
-      texture: textures.pink,
-      height: 3.04,
-      x: view.halfWidth * 0.42,
-      y: 1.32,
-      z: 2.78,
-      rotationZ: 0.14,
-    });
+    applyHeroNoteLayout();
   }
 
   function setupScrollWind() {
@@ -675,19 +1067,23 @@ async function setupNoticeBoardHero() {
       trigger: hero,
       start: "top top",
       end: "bottom top",
-      scrub: prefersReducedMotion ? false : 0.65,
+      scrub: prefersReducedMotion ? false : scrollResponse.scrub,
       onUpdate(self) {
-        scrollState.progress = self.progress;
+        scrollState.progress = self.progress * scrollResponse.progressMultiplier;
         if (prefersReducedMotion) {
           return;
         }
 
-        const gust = THREE.MathUtils.clamp(self.getVelocity() / 2400, -1, 1);
+        const gust = THREE.MathUtils.clamp(
+          (self.getVelocity() / scrollResponse.gustVelocityDivisor) * scrollResponse.gustMultiplier,
+          -1.35,
+          1.35
+        );
         setGust(gust);
         window.clearTimeout(gustResetId);
         gustResetId = window.setTimeout(() => {
           setGust(0);
-        }, 120);
+        }, scrollResponse.gustResetDelay);
       },
     });
   }
@@ -1087,11 +1483,14 @@ async function setupNoticeBoardHero() {
         note.position.y = motion.restY;
       }
     });
+
+    applyHeroNoteLayout();
   }
 
   function render(time) {
     const elapsed = time * 0.001;
-    const gust = Math.max(scrollState.gust, 0);
+    const gust = scrollState.gust;
+    const gustLift = Math.abs(gust);
 
     // The render loop combines three layers of motion:
     // 1. a baseline paper flutter
@@ -1107,8 +1506,16 @@ async function setupNoticeBoardHero() {
       const bob = Math.sin(elapsed * motion.bobSpeed + motion.flutterOffset) * motion.bobAmplitude;
       const drift = Math.cos(elapsed * motion.driftSpeed + motion.flutterOffset) * motion.driftAmplitude;
 
-      note.position.x = motion.restX + drift + scrollState.progress * motion.windDrift * 0.16 + gust * motion.windDrift;
-      note.position.y = motion.restY + bob + scrollState.progress * motion.liftRange + gust * motion.liftRange * 0.26;
+      note.position.x =
+        motion.restX +
+        drift +
+        scrollState.progress * motion.windDrift * scrollResponse.xProgressInfluence +
+        gust * motion.windDrift;
+      note.position.y =
+        motion.restY +
+        bob +
+        scrollState.progress * motion.liftRange * scrollResponse.yProgressInfluence +
+        gustLift * motion.liftRange * scrollResponse.yGustInfluence;
       note.position.z = motion.restZ;
 
       note.rotation.x =

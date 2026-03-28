@@ -1,0 +1,10 @@
+window.DROP01_SITE_CONFIG = {
+  ...(window.DROP01_SITE_CONFIG || {}),
+  submitTimeoutMs: 10000,
+  webhooks: {
+    ...(window.DROP01_SITE_CONFIG?.webhooks || {}),
+    newsletterSubscribe: "https://your-n8n-domain/webhook/drop01-newsletter-subscribe",
+    generalContact: "https://your-n8n-domain/webhook/drop01-general-contact",
+    designerIntake: "https://your-n8n-domain/webhook/drop01-designer-intake",
+  },
+};
