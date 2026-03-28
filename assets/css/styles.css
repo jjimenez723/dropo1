@@ -279,6 +279,10 @@ button {
   box-shadow: var(--shadow-soft);
 }
 
+.button--designer-intake {
+  margin-block: 2vw;
+}
+
 .button:hover,
 .button:focus-visible {
   transform: translateY(-2px);
