@@ -65,10 +65,12 @@ function setupHeaderMotion() {
   }
 
   let lastScrollY = window.scrollY;
+  let accumulatedDelta = 0;
   let ticking = false;
   let isHidden = false;
   const revealThreshold = 18;
-  const hideThreshold = 120;
+  const hideThreshold = 72;
+  const hideDistanceThreshold = 30;
 
   const setHeaderVisible = () => {
     if (!isHidden) {
@@ -125,11 +127,20 @@ function setupHeaderMotion() {
     const currentScrollY = window.scrollY;
     const delta = currentScrollY - lastScrollY;
 
+    if (delta > 0) {
+      accumulatedDelta = Math.max(0, accumulatedDelta) + delta;
+    } else if (delta < 0) {
+      accumulatedDelta = Math.min(0, accumulatedDelta) + delta;
+    }
+
     if (currentScrollY <= 24) {
+      accumulatedDelta = 0;
       setHeaderVisible();
-    } else if (delta > revealThreshold && currentScrollY > hideThreshold) {
+    } else if (accumulatedDelta > hideDistanceThreshold && currentScrollY > hideThreshold) {
+      accumulatedDelta = 0;
       setHeaderHidden();
-    } else if (delta < -revealThreshold) {
+    } else if (accumulatedDelta < -revealThreshold) {
+      accumulatedDelta = 0;
       setHeaderVisible();
     }
 
