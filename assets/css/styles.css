@@ -499,11 +499,12 @@ button {
 .hero__legend {
   position: absolute;
   left: clamp(24px, 4vw, 42px);
-  bottom: 140px;
+  top: clamp(24px, 4vw, 42px);
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  max-width: calc(100% - 84px);
+  max-width: min(520px, calc(100% - 84px));
+  align-items: flex-start;
 }
 
 .hero__legend span {
@@ -1329,6 +1330,17 @@ body.is-dragging-notice-board {
     --container: min(100vw - 28px, 1180px);
   }
 
+  .hero__overlay,
+  .hero__headline,
+  .hero__subscribe-card,
+  .hero__legend,
+  .hero-note-form,
+  .hero-note-form label,
+  .hero-note-form__status {
+    pointer-events: auto;
+    touch-action: pan-y;
+  }
+
   .page-main {
     gap: 72px;
   }
@@ -1369,7 +1381,7 @@ body.is-dragging-notice-board {
   .hero__legend {
     left: 22px;
     right: 22px;
-    bottom: 144px;
+    top: 22px;
     max-width: none;
   }
 
@@ -1437,7 +1449,7 @@ body.is-dragging-notice-board {
   .hero__legend {
     left: 14px;
     right: 14px;
-    bottom: 116px;
+    top: 14px;
     gap: 8px;
   }
 

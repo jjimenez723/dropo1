@@ -1141,13 +1141,14 @@ async function setupNoticeBoardHero() {
   }
 
   function onPointerDown(event) {
-    event.preventDefault();
     updatePointer(event);
     const intersections = raycaster.intersectObjects(noteMeshes, false);
     const hit = intersections[0];
     if (!hit) {
       return;
     }
+
+    event.preventDefault();
 
     activeNote = hit.object;
     canvas.classList.add("is-dragging");
