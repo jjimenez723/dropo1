@@ -31,7 +31,9 @@ const assetUrls = {
   one: new URL("../../dropo1/6.svg", import.meta.url).href,
   orange: new URL("../../dropo1/7.svg", import.meta.url).href,
   pink: new URL("../../dropo1/8.svg", import.meta.url).href,
-  poster: new URL("../../dropo1/9.svg", import.meta.url).href,
+  // Keep a cache-busted URL here so flyer artwork updates show up immediately
+  // in the Three.js background layer instead of hanging onto an older texture.
+  poster: new URL("../../dropo1/9.svg?rev=flyer-v2", import.meta.url).href,
 };
 
 init();
