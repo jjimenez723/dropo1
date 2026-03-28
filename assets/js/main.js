@@ -14,6 +14,8 @@ const submitTimeoutMs =
   Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs) > 0
     ? Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs)
     : 10000;
+const pendingSubmissionStorageKey = "drop01.pendingWebhookSubmissions";
+const formDraftStorageKey = "drop01.formDrafts";
 const webhookMap = {
   "newsletter-subscribe": normalizeWebhookUrl(webhookConfig.newsletterSubscribe),
   "general-contact": normalizeWebhookUrl(webhookConfig.generalContact),
@@ -43,6 +45,8 @@ function init() {
   setupRevealAnimations();
   setupButtonMotion();
   setupForms();
+  hydrateSavedFormDrafts();
+  replayPendingWebhookSubmissions();
   setupShopMotion();
   setupModal();
   setupFloatingSubscribeCard();
@@ -215,6 +219,12 @@ function setFormFeedback(form, message, state = "success") {
 
 function setupForms() {
   $$("form[data-webhook-form]").forEach((form) => {
+    const saveDraft = () => {
+      persistFormDraft(form);
+    };
+
+    form.addEventListener("input", saveDraft);
+    form.addEventListener("change", saveDraft);
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       await submitWebhookForm(form);
@@ -243,19 +253,30 @@ async function submitWebhookForm(form) {
     return;
   }
 
-  toggleFormSubmitting(form, submitButton, true, idleLabel);
+  const payload = buildFormPayload(form, webhookKey);
+
   clearFormFeedback(form);
+  toggleFormSubmitting(form, submitButton, true, idleLabel);
 
   try {
-    const payload = buildFormPayload(form, webhookKey);
+    persistFormDraft(form);
     await postJson(webhookUrl, payload);
     setFormFeedback(form, successMessage, "success");
     form.reset();
+    clearFormDraft(form);
   } catch (error) {
     console.error(`DROP 01 form submission failed for ${webhookKey}.`, error);
+    const isWorkflowError = error instanceof Error && error.message.includes("Error in workflow");
+    const draftWasSaved = webhookKey !== "newsletter-subscribe" ? persistFormDraft(form) : false;
+
+    if (webhookKey === "newsletter-subscribe") {
+      queuePendingWebhookSubmission(webhookKey, webhookUrl, payload);
+    }
+
+    const message = getSubmissionErrorMessage(webhookKey, isWorkflowError, draftWasSaved);
     setFormFeedback(
       form,
-      "The submission did not go through. Please try again in a moment.",
+      message,
       "error"
     );
   } finally {
@@ -287,6 +308,42 @@ function clearFormFeedback(form) {
   }
 }
 
+function getSubmissionErrorMessage(webhookKey, isWorkflowError, draftWasSaved) {
+  if (webhookKey === "newsletter-subscribe") {
+    return isWorkflowError
+      ? "The signup service is having a workflow issue. Your email was saved on this device and will retry automatically."
+      : "The signup did not complete, but your email was saved on this device and will retry automatically.";
+  }
+
+  if (webhookKey === "general-contact") {
+    if (isWorkflowError) {
+      return draftWasSaved
+        ? "The contact service is currently having a server issue. Your message draft was saved on this device, and you can also reach us at studio@drop01atelier.com."
+        : "The contact service is currently having a server issue. Please try again shortly or email studio@drop01atelier.com.";
+    }
+
+    return draftWasSaved
+      ? "The message did not go through. Your draft was saved on this device so you can retry in a moment."
+      : "The message did not go through. Please try again in a moment.";
+  }
+
+  if (webhookKey === "designer-intake") {
+    if (isWorkflowError) {
+      return draftWasSaved
+        ? "The designer intake service is currently having a server issue. Your application draft was saved on this device so you can retry shortly."
+        : "The designer intake service is currently having a server issue. Please try again shortly.";
+    }
+
+    return draftWasSaved
+      ? "The intake did not go through. Your application draft was saved on this device so you can retry in a moment."
+      : "The intake did not go through. Please try again in a moment.";
+  }
+
+  return draftWasSaved
+    ? "The submission did not go through. Your draft was saved on this device so you can retry in a moment."
+    : "The submission did not go through. Please try again in a moment.";
+}
+
 function normalizeWebhookUrl(value) {
   if (typeof value !== "string") {
     return "";
@@ -311,36 +368,351 @@ function normalizeWebhookUrl(value) {
 
 function buildFormPayload(form, webhookKey) {
   const formData = new FormData(form);
-  const fields = Object.fromEntries(formData.entries());
+  const fields = Object.fromEntries(
+    Array.from(formData.entries(), ([key, value]) => [key, typeof value === "string" ? value.trim() : value])
+  );
+  const now = new Date();
+  const isoTimestamp = now.toISOString();
+  const dateSent = formatLocalDate(now);
+  const email = typeof fields.email === "string" ? fields.email : "";
+  const name = typeof fields.name === "string" ? fields.name : "";
+  const message = typeof fields.message === "string" ? fields.message : "";
+  const inquiryType = typeof fields.type === "string" ? fields.type : "";
+  const page = window.location.pathname.split("/").pop() || "index.html";
+  const sourceUrl = window.location.href;
+  const normalizedSubmission = {
+    formType: webhookKey,
+    email,
+    name,
+    message,
+    inquiryType,
+    page,
+    sourceUrl,
+    submittedAt: isoTimestamp,
+    dateSent,
+  };
+
+  const flatFields = Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [key, typeof value === "string" ? value : String(value ?? "")])
+  );
 
   return {
+    ...flatFields,
+    email,
+    Email: email,
+    emailAddress: email,
+    email_address: email,
+    name,
+    Name: name,
+    fullName: name,
+    message,
+    Message: message,
+    inquiryType,
     formType: webhookKey,
-    page: window.location.pathname.split("/").pop() || "index.html",
-    sourceUrl: window.location.href,
-    submittedAt: new Date().toISOString(),
-    fields,
+    page,
+    sourceUrl,
+    submittedAt: isoTimestamp,
+    dateSent,
+    "Date Sent": dateSent,
+    fieldsJson: JSON.stringify(flatFields),
+    submissionJson: JSON.stringify(normalizedSubmission),
+    metadataJson: JSON.stringify({
+      page,
+      sourceUrl,
+      submittedAt: isoTimestamp,
+      dateSent,
+    }),
   };
+}
+
+function buildFormDraftData(form) {
+  const formData = new FormData(form);
+
+  return Object.fromEntries(
+    Array.from(formData.entries(), ([key, value]) => [key, typeof value === "string" ? value : String(value ?? "")])
+  );
+}
+
+function getFormDraftKey(form) {
+  const webhookKey = form.getAttribute("data-webhook-form") || "form";
+  const page = window.location.pathname.split("/").pop() || "index.html";
+  const formId = form.id || form.getAttribute("name") || form.getAttribute("data-form-id") || "";
+
+  return `${page}::${webhookKey}::${formId}`;
+}
+
+function persistFormDraft(form) {
+  const drafts = readFormDrafts();
+  const draftKey = getFormDraftKey(form);
+  const fields = buildFormDraftData(form);
+  const hasAnyValue = Object.values(fields).some((value) => value.trim() !== "");
+
+  if (!hasAnyValue) {
+    if (!(draftKey in drafts)) {
+      return false;
+    }
+
+    delete drafts[draftKey];
+    writeFormDrafts(drafts);
+    return false;
+  }
+
+  drafts[draftKey] = {
+    fields,
+    updatedAt: new Date().toISOString(),
+  };
+  writeFormDrafts(drafts);
+  return true;
+}
+
+function clearFormDraft(form) {
+  const drafts = readFormDrafts();
+  const draftKey = getFormDraftKey(form);
+
+  if (!(draftKey in drafts)) {
+    return;
+  }
+
+  delete drafts[draftKey];
+  writeFormDrafts(drafts);
+}
+
+function hydrateSavedFormDrafts() {
+  const drafts = readFormDrafts();
+
+  $$("form[data-webhook-form]").forEach((form) => {
+    const draft = drafts[getFormDraftKey(form)];
+    if (!draft || typeof draft !== "object" || !draft.fields || typeof draft.fields !== "object") {
+      return;
+    }
+
+    applyFormDraft(form, draft.fields);
+  });
+}
+
+function applyFormDraft(form, fields) {
+  Array.from(form.elements).forEach((element) => {
+    if (
+      !(element instanceof HTMLInputElement) &&
+      !(element instanceof HTMLTextAreaElement) &&
+      !(element instanceof HTMLSelectElement)
+    ) {
+      return;
+    }
+
+    if (!element.name || !(element.name in fields)) {
+      return;
+    }
+
+    if ((element.type === "checkbox" || element.type === "radio") && typeof fields[element.name] === "string") {
+      element.checked = fields[element.name] === element.value;
+      return;
+    }
+
+    element.value = String(fields[element.name] ?? "");
+  });
+}
+
+function formatLocalDate(value) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function isCrossOriginRequest(url) {
+  try {
+    return new URL(url, window.location.href).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+function buildWebhookBody(payload) {
+  const body = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    body.append(key, typeof value === "string" ? value : String(value));
+  });
+
+  return body;
 }
 
 async function postJson(url, payload) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), submitTimeoutMs);
+  const isCrossOrigin = isCrossOriginRequest(url);
+  const body = buildWebhookBody(payload);
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+    let response;
+
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        body,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (!isCrossOrigin) {
+        throw error;
+      }
+
+      response = await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        body,
+        signal: controller.signal,
+      });
+    }
+
+    if (response.type === "opaque") {
+      return;
+    }
+
+    const rawBody = await response.text();
+    let responseMessage = "";
+
+    if (rawBody) {
+      try {
+        const parsed = JSON.parse(rawBody);
+        if (parsed && typeof parsed.message === "string") {
+          responseMessage = parsed.message;
+        }
+      } catch {
+        responseMessage = rawBody.trim();
+      }
+    }
 
     if (!response.ok) {
-      throw new Error(`Webhook responded with ${response.status}`);
+      throw new Error(
+        responseMessage
+          ? `Webhook responded with ${response.status}: ${responseMessage}`
+          : `Webhook responded with ${response.status}`
+      );
     }
   } finally {
     window.clearTimeout(timeoutId);
+  }
+}
+
+function queuePendingWebhookSubmission(webhookKey, webhookUrl, payload) {
+  const queue = readPendingWebhookSubmissions();
+  const email = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
+
+  if (!email) {
+    return;
+  }
+
+  const duplicateIndex = queue.findIndex(
+    (entry) =>
+      entry?.webhookKey === webhookKey &&
+      entry?.webhookUrl === webhookUrl &&
+      typeof entry?.payload?.email === "string" &&
+      entry.payload.email.trim().toLowerCase() === email
+  );
+
+  const nextEntry = {
+    webhookKey,
+    webhookUrl,
+    payload,
+    queuedAt: new Date().toISOString(),
+  };
+
+  if (duplicateIndex >= 0) {
+    queue[duplicateIndex] = nextEntry;
+  } else {
+    queue.push(nextEntry);
+  }
+
+  writePendingWebhookSubmissions(queue);
+}
+
+async function replayPendingWebhookSubmissions() {
+  const queue = readPendingWebhookSubmissions();
+  if (!queue.length) {
+    return;
+  }
+
+  const remaining = [];
+
+  for (const entry of queue) {
+    const webhookUrl =
+      normalizeWebhookUrl(entry?.webhookUrl) || normalizeWebhookUrl(webhookMap[entry?.webhookKey]);
+
+    if (!webhookUrl || !entry?.payload) {
+      continue;
+    }
+
+    try {
+      await postJson(webhookUrl, entry.payload);
+      console.info(`DROP 01 replayed queued ${entry.webhookKey} submission successfully.`);
+    } catch (error) {
+      console.warn(`DROP 01 replay failed for queued ${entry.webhookKey} submission.`, error);
+      remaining.push(entry);
+    }
+  }
+
+  writePendingWebhookSubmissions(remaining);
+}
+
+function readPendingWebhookSubmissions() {
+  try {
+    const raw = window.localStorage.getItem(pendingSubmissionStorageKey);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePendingWebhookSubmissions(queue) {
+  try {
+    if (!queue.length) {
+      window.localStorage.removeItem(pendingSubmissionStorageKey);
+      return;
+    }
+
+    window.localStorage.setItem(pendingSubmissionStorageKey, JSON.stringify(queue));
+  } catch (error) {
+    console.warn("DROP 01 could not persist pending webhook submissions.", error);
+  }
+}
+
+function readFormDrafts() {
+  try {
+    const raw = window.localStorage.getItem(formDraftStorageKey);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeFormDrafts(drafts) {
+  try {
+    if (!Object.keys(drafts).length) {
+      window.localStorage.removeItem(formDraftStorageKey);
+      return;
+    }
+
+    window.localStorage.setItem(formDraftStorageKey, JSON.stringify(drafts));
+  } catch (error) {
+    console.warn("DROP 01 could not persist form drafts.", error);
   }
 }
 
