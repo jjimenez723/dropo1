@@ -979,6 +979,10 @@ body.is-dragging-notice-board {
   color: var(--ink-inverse-muted);
 }
 
+.subscribe-band .field label {
+  color: #000;
+}
+
 .subscribe-band .field input::placeholder,
 .subscribe-band .field textarea::placeholder {
   color: var(--ink);
