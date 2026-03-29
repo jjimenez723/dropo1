@@ -980,8 +980,12 @@ body.is-dragging-notice-board {
 }
 
 .subscribe-band .field input::placeholder,
+.subscribe-band .field textarea::placeholder {
+  color: var(--ink);
+  opacity: 1;
+}
+
 .subscribe-modal .field input::placeholder,
-.subscribe-band .field textarea::placeholder,
 .subscribe-modal .field textarea::placeholder {
   color: var(--ink-inverse-soft);
 }
@@ -1797,12 +1801,16 @@ body.is-dragging-notice-board {
   }
 
   .hero__overlay,
-  .hero__headline,
-  .hero__subscribe-card,
   .hero-note-form,
   .hero-note-form label,
   .hero-note-form__status {
     pointer-events: none;
+  }
+
+  .hero__headline,
+  .hero__subscribe-card.is-visible {
+    pointer-events: auto;
+    touch-action: pan-y;
   }
 
   .hero__headline .button,

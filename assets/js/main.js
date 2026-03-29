@@ -157,7 +157,12 @@ function setupHeaderMotion() {
     return;
   }
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || hasCoarsePointer() || isCompactViewport()) {
+    gsap.set(header, {
+      yPercent: 0,
+      autoAlpha: 1,
+      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
+    });
     return;
   }
 
@@ -1970,6 +1975,7 @@ async function setupNoticeBoardHero() {
   };
   const view = { halfHeight: 8, halfWidth: 8, height: 16, width: 16 };
   const heroLineKeys = ["d", "r", "o", "p", "zero", "one", "orange"];
+  const heroLogoKeys = new Set(heroLineKeys);
   const heroNoteRotations = {
     d: -0.08,
     r: 0.06,
@@ -2007,7 +2013,7 @@ async function setupNoticeBoardHero() {
       pink: { x: 0.9, y: 0.78, height: 0.2, rotationZ: 0.12, z: 2.98 },
     },
     tablet: {
-      lineY: 0.22,
+      lineY: 0.16,
       maxHeight: 0.18,
       widthFill: 0.96,
       gap: 0.014,
@@ -2020,7 +2026,7 @@ async function setupNoticeBoardHero() {
       pink: { x: 0.88, y: 0.79, height: 0.18, rotationZ: 0.12, z: 2.94 },
     },
     mobile: {
-      lineY: 0.2,
+      lineY: 0.14,
       maxHeight: 0.11,
       widthFill: 0.98,
       gap: 0.01,
@@ -2044,7 +2050,10 @@ async function setupNoticeBoardHero() {
   const swipeHistory = [];
 
   let activeNote = null;
-  let frontZ = 9;
+  const boardFrontStartZ = 9;
+  const logoFrontStartZ = 12.6;
+  let boardFrontZ = boardFrontStartZ;
+  let logoFrontZ = logoFrontStartZ;
   let rafId = 0;
   let gustResetId = 0;
   let resizeRafId = 0;
@@ -2187,11 +2196,15 @@ async function setupNoticeBoardHero() {
       restX: x,
       restY: y,
       restZ: z,
+      homeX: x,
+      homeY: y,
+      homeZ: z,
       anchorX: x / Math.max(view.halfWidth, 1),
       anchorY: y / Math.max(view.halfHeight, 1),
       restRotationX: 0,
       restRotationY: 0,
       restRotationZ: rotationZ,
+      homeRotationZ: rotationZ,
       width,
       height,
       flutterAmplitude: prefersReducedMotion ? 0 : randomBetween(0.006, 0.028) * motionScale,
@@ -2211,6 +2224,7 @@ async function setupNoticeBoardHero() {
       gustYaw: randomBetween(-0.08, 0.08) * motionScale,
       isDragging: false,
       isThrowing: false,
+      keepOnTop: false,
       responsive: !userNote,
       ownsTexture,
       userNote,
@@ -2317,7 +2331,8 @@ async function setupNoticeBoardHero() {
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
-    let maxRestZ = frontZ;
+    let maxLogoRestZ = logoFrontStartZ;
+    let maxBoardRestZ = boardFrontStartZ;
 
     const totalAspect = heroLineKeys.reduce((sum, key) => {
       const note = heroNoteMeshes.get(key);
@@ -2349,13 +2364,17 @@ async function setupNoticeBoardHero() {
       const noteWidth = rowHeight * aspect;
       const edgeOffset = (layoutPreset.edgeOffsets?.[key] || 0) * stage.width;
       const centerX = cursor + noteWidth / 2 + edgeOffset;
-      const z = 3.5 + index * 0.18;
+      const z = logoFrontStartZ + index * 0.18;
       const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
       motion.restX = centerX;
       motion.restY = lineY;
       motion.restZ = z;
+      motion.homeX = centerX;
+      motion.homeY = lineY;
+      motion.homeZ = z;
       motion.restRotationZ = heroNoteRotations[key] ?? 0;
+      motion.homeRotationZ = motion.restRotationZ;
 
       note.scale.set(scale, scale, 1);
       note.renderOrder = Math.round(z * 10);
@@ -2365,7 +2384,7 @@ async function setupNoticeBoardHero() {
         note.rotation.z = motion.restRotationZ;
       }
 
-      maxRestZ = Math.max(maxRestZ, z);
+      maxLogoRestZ = Math.max(maxLogoRestZ, z);
       cursor += noteWidth + gap;
     });
 
@@ -2379,7 +2398,11 @@ async function setupNoticeBoardHero() {
       motion.restX = point.x;
       motion.restY = point.y;
       motion.restZ = layoutPreset.pink.z;
+      motion.homeX = point.x;
+      motion.homeY = point.y;
+      motion.homeZ = layoutPreset.pink.z;
       motion.restRotationZ = layoutPreset.pink.rotationZ;
+      motion.homeRotationZ = layoutPreset.pink.rotationZ;
 
       pinkNote.scale.set(scale, scale, 1);
       pinkNote.renderOrder = Math.round(layoutPreset.pink.z * 10);
@@ -2389,10 +2412,11 @@ async function setupNoticeBoardHero() {
         pinkNote.rotation.z = layoutPreset.pink.rotationZ;
       }
 
-      maxRestZ = Math.max(maxRestZ, layoutPreset.pink.z);
+      maxBoardRestZ = Math.max(maxBoardRestZ, layoutPreset.pink.z);
     }
 
-    frontZ = maxRestZ;
+    boardFrontZ = Math.max(boardFrontZ, maxBoardRestZ);
+    logoFrontZ = Math.max(logoFrontZ, maxLogoRestZ);
   }
 
   function buildHeroNotes(textures) {
@@ -2419,6 +2443,7 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       motion.baseHeight = config.height;
       motion.responsive = false;
+      motion.keepOnTop = heroLogoKeys.has(config.key);
       heroNoteMeshes.set(config.key, note);
     });
 
@@ -2588,7 +2613,16 @@ async function setupNoticeBoardHero() {
     document.body.classList.remove("is-dragging-notice-board");
 
     const velocity = calculateVelocity();
-    if (velocity.length() > 8.5) {
+    if (motion.keepOnTop) {
+      gsap.to(motion, {
+        restX: motion.homeX,
+        restY: motion.homeY,
+        restZ: motion.homeZ,
+        restRotationZ: motion.homeRotationZ,
+        duration: 0.48,
+        ease: "power3.out",
+      });
+    } else if (velocity.length() > 8.5) {
       throwNote(releasedNote, velocity);
     } else {
       motion.restX = releasedNote.position.x;
@@ -2626,10 +2660,19 @@ async function setupNoticeBoardHero() {
   }
 
   function bringToFront(note) {
-    frontZ += 0.45;
-    note.position.z = frontZ;
-    note.renderOrder = Math.round(frontZ * 10);
-    note.userData.motion.restZ = frontZ;
+    const motion = note.userData.motion;
+    if (motion.keepOnTop) {
+      logoFrontZ += 0.45;
+      note.position.z = logoFrontZ;
+      note.renderOrder = Math.round(logoFrontZ * 10);
+      motion.restZ = logoFrontZ;
+      return;
+    }
+
+    boardFrontZ = Math.min(boardFrontZ + 0.45, logoFrontStartZ - 0.35);
+    note.position.z = boardFrontZ;
+    note.renderOrder = Math.round(boardFrontZ * 10);
+    motion.restZ = boardFrontZ;
   }
 
   function throwNote(note, velocity) {
@@ -2699,7 +2742,7 @@ async function setupNoticeBoardHero() {
       height: 3.18,
       x: 0,
       y: view.halfHeight + 3,
-      z: frontZ + 2.4,
+      z: Math.min(boardFrontZ + 0.8, logoFrontStartZ - 0.3),
       rotationZ: randomBetween(-0.12, 0.12),
       ownsTexture: true,
       userNote: true,
