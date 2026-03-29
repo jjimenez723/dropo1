@@ -194,7 +194,9 @@
         </div>
       </section>
 
-      <section class="section story-grid">
+      <!-- Product-facing preview content is intentionally hidden until real inventory is ready.
+           Restore instructions live in Agents.md. -->
+      <section class="section story-grid" data-product-preview="featured-release" hidden>
         <article class="editorial-card editorial-card--stacked reveal">
           <div class="editorial-card__media panel-media">
             <span class="panel-media__cover" aria-hidden="true"></span>
@@ -203,18 +205,7 @@
               alt="Designer wearing sculptural black garments in an editorial setting"
             />
           </div>
-          <div class="editorial-card__body">
-            <p class="eyebrow">Featured release</p>
-            <h3>Noor Atelier / Veil Trench</h3>
-            <p>
-              Modular outerwear in a pearl-black cotton blend with hidden drape panels and a
-              limited 60-piece production target.
-            </p>
-            <div class="button-row">
-              <a class="button" href="shop.html" data-hover-lift>View Drop</a>
-              <a class="button-ghost" href="about.html" data-hover-lift>Read Our Story</a>
-            </div>
-          </div>
+          <!-- Featured release copy/actions intentionally removed until real products are ready. -->
         </article>
 
         <article class="quote-card reveal">
@@ -226,7 +217,7 @@
         </article>
       </section>
 
-      <section class="section">
+      <section class="section" data-product-preview="shop-preview" hidden>
         <div class="section-head reveal">
           <p class="eyebrow">Preview the shop</p>
           <h2 class="title-lg">Current drops move quickly and stay intimate.</h2>
@@ -236,7 +227,7 @@
           </p>
         </div>
 
-        <div class="drops-grid" data-shopify-grid="home" data-shopify-limit="3">
+        <div class="drops-grid" data-shopify-grid-disabled="home" data-shopify-limit="3">
           <article class="drop-card reveal">
             <div class="drop-card__media panel-media">
               <span class="panel-media__cover" aria-hidden="true"></span>
