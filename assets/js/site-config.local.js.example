@@ -7,4 +7,16 @@ window.DROP01_SITE_CONFIG = {
     generalContact: "https://your-n8n-domain/webhook/drop01-general-contact",
     designerIntake: "https://your-n8n-domain/webhook/drop01-designer-intake",
   },
+  shopify: {
+    ...(window.DROP01_SITE_CONFIG?.shopify || {}),
+    storeDomain: "your-store.myshopify.com",
+    storefrontAccessToken: "your-public-storefront-access-token",
+    apiVersion: "2026-01",
+    collectionHandle: "",
+    homeCollectionHandle: "",
+    shopCollectionHandle: "",
+    featuredProductHandle: "",
+    homeProductLimit: 3,
+    shopProductLimit: 6,
+  },
 };

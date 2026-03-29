@@ -21,6 +21,7 @@ const webhookMap = {
   "general-contact": normalizeWebhookUrl(webhookConfig.generalContact),
   "designer-intake": normalizeWebhookUrl(webhookConfig.designerIntake),
 };
+const shopifyConfig = normalizeShopifyConfig(siteConfig.shopify || {});
 
 // The SVG notes live in /dropo1. Using import.meta.url keeps the paths correct
 // even though the module itself sits under assets/js.
@@ -36,6 +37,7 @@ const assetUrls = {
   // Keep a cache-busted URL here so flyer artwork updates show up immediately
   // in the Three.js background layer instead of hanging onto an older texture.
   poster: new URL("../../dropo1/9.svg?rev=flyer-v2", import.meta.url).href,
+  fallbackProduct: new URL("../../logo.png", import.meta.url).href,
 };
 
 init();
@@ -48,6 +50,7 @@ function init() {
   hydrateSavedFormDrafts();
   replayPendingWebhookSubmissions();
   setupShopMotion();
+  void setupShopifyStorefront();
   setupModal();
   setupFloatingSubscribeCard();
   setupMultiStepForm();
@@ -193,12 +196,17 @@ function setupRevealAnimations() {
   });
 }
 
-function setupButtonMotion() {
+function setupButtonMotion(scope = document) {
   if (prefersReducedMotion) {
     return;
   }
 
-  $$("[data-hover-lift]").forEach((button) => {
+  $$("[data-hover-lift]", scope).forEach((button) => {
+    if (button.dataset.hoverLiftReady === "true") {
+      return;
+    }
+
+    button.dataset.hoverLiftReady = "true";
     button.addEventListener("mouseenter", () => {
       gsap.to(button, { y: -3, duration: 0.22, ease: "power2.out" });
     });
@@ -376,6 +384,171 @@ function normalizeWebhookUrl(value) {
   } catch {
     return "";
   }
+}
+
+function normalizeShopifyConfig(config) {
+  const normalized = config && typeof config === "object" ? config : {};
+  const storeDomain = normalizeShopifyStoreDomain(normalized.storeDomain);
+  const storefrontAccessToken =
+    typeof normalized.storefrontAccessToken === "string"
+      ? normalized.storefrontAccessToken.trim()
+      : "";
+  const apiVersion =
+    typeof normalized.apiVersion === "string" && normalized.apiVersion.trim()
+      ? normalized.apiVersion.trim()
+      : "2026-01";
+
+  return {
+    storeDomain,
+    storefrontAccessToken,
+    apiVersion,
+    collectionHandle: normalizeHandle(normalized.collectionHandle),
+    homeCollectionHandle: normalizeHandle(normalized.homeCollectionHandle),
+    shopCollectionHandle: normalizeHandle(normalized.shopCollectionHandle),
+    featuredProductHandle: normalizeHandle(normalized.featuredProductHandle),
+    homeProductLimit: getPositiveInteger(normalized.homeProductLimit, 3),
+    shopProductLimit: getPositiveInteger(normalized.shopProductLimit, 6),
+    enabled: Boolean(storeDomain && storefrontAccessToken),
+  };
+}
+
+function normalizeShopifyStoreDomain(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const parsed = trimmed.includes("://") ? new URL(trimmed) : new URL(`https://${trimmed}`);
+    return parsed.hostname.replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeHandle(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getPositiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character] || character
+  );
+}
+
+function sanitizeUrl(value, fallback = "#") {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  try {
+    const parsed = new URL(value, window.location.href);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return fallback;
+    }
+
+    return parsed.href;
+  } catch {
+    return fallback;
+  }
+}
+
+function truncateText(value, maxLength = 150) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
+}
+
+function formatMoney(money) {
+  const amount = Number(money?.amount);
+  const currencyCode =
+    typeof money?.currencyCode === "string" && money.currencyCode ? money.currencyCode : "USD";
+
+  if (!Number.isFinite(amount)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currencyCode,
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(amount);
+}
+
+function formatPriceRange(priceRange) {
+  const minimum = formatMoney(priceRange?.minVariantPrice);
+  const maximum = formatMoney(priceRange?.maxVariantPrice);
+
+  if (!minimum && !maximum) {
+    return "";
+  }
+
+  if (!maximum || minimum === maximum) {
+    return minimum || maximum;
+  }
+
+  return `${minimum} - ${maximum}`;
+}
+
+function getProductUrl(product) {
+  return sanitizeUrl(
+    typeof product?.onlineStoreUrl === "string" && product.onlineStoreUrl
+      ? product.onlineStoreUrl
+      : `https://${shopifyConfig.storeDomain}/products/${product?.handle || ""}`
+  );
+}
+
+function getProductSummary(product) {
+  const description = truncateText(product?.description || "", 150);
+  if (description) {
+    return description;
+  }
+
+  return "Limited-run designer piece synced directly from the connected Shopify storefront.";
+}
+
+function getProductImages(product) {
+  const images = Array.isArray(product?.images?.nodes) ? product.images.nodes : [];
+  const featuredImage = product?.featuredImage ? [product.featuredImage] : [];
+  const deduped = [...featuredImage, ...images].filter(
+    (image, index, source) =>
+      image?.url &&
+      source.findIndex((candidate) => candidate?.url === image.url) === index
+  );
+
+  return deduped.slice(0, 2);
+}
+
+function getProductBadgeCopy(product) {
+  const availability = product?.availableForSale ? "Available now" : "Currently sold out";
+  const compareAt = formatMoney(product?.compareAtPriceRange?.maxVariantPrice);
+  const price = formatPriceRange(product?.priceRange);
+
+  if (compareAt && price && compareAt !== price) {
+    return [availability, `Compare at ${compareAt}`];
+  }
+
+  return [availability, "Synced from Shopify"];
 }
 
 function validateSimpleUrlField(field) {
@@ -743,6 +916,398 @@ function writeFormDrafts(drafts) {
     window.localStorage.setItem(formDraftStorageKey, JSON.stringify(drafts));
   } catch (error) {
     console.warn("DROP 01 could not persist form drafts.", error);
+  }
+}
+
+async function setupShopifyStorefront() {
+  if (!shopifyConfig.enabled) {
+    return;
+  }
+
+  const homeGrid = document.querySelector('[data-shopify-grid="home"]');
+  const shopGrid = document.querySelector('[data-shopify-grid="shop"]');
+  const featuredBanner = document.querySelector("[data-shopify-featured]");
+
+  if (!homeGrid && !shopGrid && !featuredBanner) {
+    return;
+  }
+
+  const sharedCollectionHandle = shopifyConfig.collectionHandle;
+  const homeCollectionHandle = shopifyConfig.homeCollectionHandle || sharedCollectionHandle;
+  const shopCollectionHandle = shopifyConfig.shopCollectionHandle || sharedCollectionHandle;
+  const homeLimit = getPositiveInteger(
+    homeGrid?.getAttribute("data-shopify-limit"),
+    shopifyConfig.homeProductLimit
+  );
+  const shopLimit = getPositiveInteger(
+    shopGrid?.getAttribute("data-shopify-limit"),
+    shopifyConfig.shopProductLimit
+  );
+  const feedCache = new Map();
+  const loadFeed = (collectionHandle, limit) => {
+    const key = `${collectionHandle || "all"}::${limit}`;
+    if (!feedCache.has(key)) {
+      feedCache.set(key, fetchShopifyFeed({ collectionHandle, limit }));
+    }
+
+    return feedCache.get(key);
+  };
+
+  try {
+    const [homeFeed, shopFeed, explicitFeaturedProduct] = await Promise.all([
+      homeGrid ? loadFeed(homeCollectionHandle, homeLimit) : Promise.resolve(null),
+      shopGrid || featuredBanner ? loadFeed(shopCollectionHandle, shopLimit) : Promise.resolve(null),
+      shopifyConfig.featuredProductHandle
+        ? fetchShopifyProductByHandle(shopifyConfig.featuredProductHandle)
+        : Promise.resolve(null),
+    ]);
+
+    if (homeGrid && homeFeed?.products?.length) {
+      renderShopifyGrid(homeGrid, homeFeed.products.slice(0, homeLimit));
+    }
+
+    if (shopGrid && shopFeed?.products?.length) {
+      renderShopifyGrid(shopGrid, shopFeed.products.slice(0, shopLimit));
+    }
+
+    if (featuredBanner) {
+      const featuredProduct =
+        explicitFeaturedProduct ||
+        selectFeaturedProduct(shopFeed?.products) ||
+        selectFeaturedProduct(homeFeed?.products);
+
+      if (featuredProduct) {
+        renderFeaturedProductBanner(featuredBanner, {
+          product: featuredProduct,
+          collectionTitle: shopFeed?.title || homeFeed?.title || "",
+          productCount: shopFeed?.products?.length || homeFeed?.products?.length || 0,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("DROP 01 Shopify storefront sync failed.", error);
+  }
+}
+
+async function fetchShopifyFeed({ collectionHandle = "", limit = 6 }) {
+  if (collectionHandle) {
+    const data = await postShopifyStorefrontQuery(
+      `
+        query Drop01CollectionProducts($handle: String!, $limit: Int!) {
+          collection(handle: $handle) {
+            title
+            handle
+            products(first: $limit) {
+              nodes {
+                id
+                title
+                handle
+                vendor
+                description
+                tags
+                availableForSale
+                onlineStoreUrl
+                featuredImage {
+                  url
+                  altText
+                }
+                images(first: 2) {
+                  nodes {
+                    url
+                    altText
+                  }
+                }
+                priceRange {
+                  minVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                  maxVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+                compareAtPriceRange {
+                  maxVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      { handle: collectionHandle, limit }
+    );
+
+    return {
+      title: data?.collection?.title || "",
+      handle: data?.collection?.handle || collectionHandle,
+      products: Array.isArray(data?.collection?.products?.nodes) ? data.collection.products.nodes : [],
+    };
+  }
+
+  const data = await postShopifyStorefrontQuery(
+    `
+      query Drop01Products($limit: Int!) {
+        products(first: $limit, sortKey: UPDATED_AT, reverse: true) {
+          nodes {
+            id
+            title
+            handle
+            vendor
+            description
+            tags
+            availableForSale
+            onlineStoreUrl
+            featuredImage {
+              url
+              altText
+            }
+            images(first: 2) {
+              nodes {
+                url
+                altText
+              }
+            }
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+              maxVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+            compareAtPriceRange {
+              maxVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+          }
+        }
+      }
+    `,
+    { limit }
+  );
+
+  return {
+    title: "Storefront",
+    handle: "",
+    products: Array.isArray(data?.products?.nodes) ? data.products.nodes : [],
+  };
+}
+
+async function fetchShopifyProductByHandle(handle) {
+  const data = await postShopifyStorefrontQuery(
+    `
+      query Drop01FeaturedProduct($handle: String!) {
+        product(handle: $handle) {
+          id
+          title
+          handle
+          vendor
+          description
+          tags
+          availableForSale
+          onlineStoreUrl
+          featuredImage {
+            url
+            altText
+          }
+          images(first: 2) {
+            nodes {
+              url
+              altText
+            }
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          compareAtPriceRange {
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+    `,
+    { handle }
+  );
+
+  return data?.product || null;
+}
+
+async function postShopifyStorefrontQuery(query, variables = {}) {
+  const response = await fetch(
+    `https://${shopifyConfig.storeDomain}/api/${shopifyConfig.apiVersion}/graphql.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": shopifyConfig.storefrontAccessToken,
+      },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Shopify responded with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (Array.isArray(payload?.errors) && payload.errors.length) {
+    throw new Error(payload.errors.map((error) => error.message).join("; "));
+  }
+
+  return payload?.data || {};
+}
+
+function selectFeaturedProduct(products) {
+  if (!Array.isArray(products) || !products.length) {
+    return null;
+  }
+
+  return (
+    products.find((product) =>
+      Array.isArray(product?.tags) &&
+      product.tags.some((tag) => ["featured", "drop-featured"].includes(String(tag).toLowerCase()))
+    ) || products[0]
+  );
+}
+
+function renderShopifyGrid(grid, products) {
+  if (!Array.isArray(products) || !products.length) {
+    return;
+  }
+
+  grid.innerHTML = products.map((product) => renderProductCard(product)).join("");
+  setupButtonMotion(grid);
+
+  const cards = $$(".drop-card", grid);
+  if (!prefersReducedMotion && cards.length) {
+    gsap.fromTo(
+      cards,
+      { autoAlpha: 0, y: 18 },
+      { autoAlpha: 1, y: 0, duration: 0.58, ease: "power3.out", stagger: 0.08 }
+    );
+  }
+
+  ScrollTrigger.refresh();
+}
+
+function renderProductCard(product) {
+  const productUrl = getProductUrl(product);
+  const [primaryImage, secondaryImage] = getProductImages(product);
+  const primaryImageUrl = sanitizeUrl(primaryImage?.url, assetUrls.fallbackProduct);
+  const secondaryImageUrl = sanitizeUrl(secondaryImage?.url || primaryImage?.url, primaryImageUrl);
+  const primaryAlt = escapeHtml(primaryImage?.altText || product?.title || "DROP 01 product");
+  const secondaryAlt = escapeHtml(secondaryImage?.altText || product?.title || "DROP 01 product detail");
+  const badges = getProductBadgeCopy(product);
+  const price = formatPriceRange(product?.priceRange) || "See store";
+  const compareAt = formatMoney(product?.compareAtPriceRange?.maxVariantPrice);
+  const compareMarkup =
+    compareAt && compareAt !== price
+      ? `<span class="drop-card__compare-price">${escapeHtml(compareAt)}</span>`
+      : "";
+
+  return `
+    <article class="drop-card" data-shopify-product-card>
+      <a class="drop-card__media" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer">
+        <img src="${escapeHtml(primaryImageUrl)}" alt="${primaryAlt}" loading="lazy" />
+        <img src="${escapeHtml(secondaryImageUrl)}" alt="${secondaryAlt}" loading="lazy" />
+      </a>
+      <div class="drop-card__body">
+        <div class="drop-card__meta">
+          <span>${escapeHtml(product?.vendor || "Independent designer")}</span>
+          <div class="drop-card__price-stack">
+            <strong>${escapeHtml(price)}</strong>
+            ${compareMarkup}
+          </div>
+        </div>
+        <h3>${escapeHtml(product?.title || "Untitled piece")}</h3>
+        <p>${escapeHtml(getProductSummary(product))}</p>
+        <div class="pill-row drop-card__status">
+          ${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}
+        </div>
+        <div class="drop-actions">
+          <a class="button" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer" data-hover-lift>
+            ${product?.availableForSale ? "Shop Now" : "View Product"}
+          </a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderFeaturedProductBanner(banner, { product, collectionTitle, productCount }) {
+  const label = banner.querySelector("[data-shopify-featured-label]");
+  const title = banner.querySelector("[data-shopify-featured-title]");
+  const body = banner.querySelector("[data-shopify-featured-body]");
+  const primaryLink = banner.querySelector("[data-shopify-featured-primary]");
+  const primaryMetricLabel = banner.querySelector('[data-shopify-featured-metric-label="primary"]');
+  const primaryMetricValue = banner.querySelector('[data-shopify-featured-metric-value="primary"]');
+  const primaryMetricCopy = banner.querySelector('[data-shopify-featured-metric-copy="primary"]');
+  const secondaryMetricLabel = banner.querySelector('[data-shopify-featured-metric-label="secondary"]');
+  const secondaryMetricValue = banner.querySelector('[data-shopify-featured-metric-value="secondary"]');
+  const secondaryMetricCopy = banner.querySelector('[data-shopify-featured-metric-copy="secondary"]');
+  const productUrl = getProductUrl(product);
+  const price = formatPriceRange(product?.priceRange) || "See store";
+
+  if (label) {
+    label.textContent = collectionTitle ? `${collectionTitle} / Shopify sync` : "Featured drop";
+  }
+
+  if (title) {
+    title.textContent = `${product?.vendor || "Designer"} / ${product?.title || "Featured product"}`;
+  }
+
+  if (body) {
+    body.textContent = getProductSummary(product);
+  }
+
+  if (primaryLink) {
+    primaryLink.textContent = product?.availableForSale ? "Shop Featured Piece" : "View Featured Piece";
+    primaryLink.href = productUrl;
+    primaryLink.target = "_blank";
+    primaryLink.rel = "noreferrer";
+  }
+
+  if (primaryMetricLabel) {
+    primaryMetricLabel.textContent = "Store sync";
+  }
+
+  if (primaryMetricValue) {
+    primaryMetricValue.textContent = `${Math.max(productCount, 1)} live product${Math.max(productCount, 1) === 1 ? "" : "s"}`;
+  }
+
+  if (primaryMetricCopy) {
+    primaryMetricCopy.textContent = "Cards and imagery now refresh from the connected Shopify storefront on page load.";
+  }
+
+  if (secondaryMetricLabel) {
+    secondaryMetricLabel.textContent = "Featured price";
+  }
+
+  if (secondaryMetricValue) {
+    secondaryMetricValue.textContent = price;
+  }
+
+  if (secondaryMetricCopy) {
+    secondaryMetricCopy.textContent = product?.availableForSale
+      ? "Available now in Shopify with live imagery, title, and pricing."
+      : "Product remains visible here even when Shopify marks it unavailable.";
   }
 }
 
@@ -1813,7 +2378,8 @@ async function setupNoticeBoardHero() {
     canvasTexture.height = 768;
 
     const context = canvasTexture.getContext("2d");
-    const palette = Math.random() > 0.5 ? ["#fff9d8", "#f5e8a4"] : ["#fffdf8", "#f2eee3"];
+    const palette =
+      Math.random() > 0.5 ? ["#eef4f8", "#d7e2ec"] : ["#f7fbff", "#c9d7e3"];
 
     context.fillStyle = palette[0];
     context.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
@@ -1824,7 +2390,7 @@ async function setupNoticeBoardHero() {
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
 
-    context.fillStyle = "rgba(242, 240, 229, 0.85)";
+    context.fillStyle = "rgba(215, 226, 236, 0.85)";
     context.fillRect(canvasTexture.width * 0.36, 28, canvasTexture.width * 0.28, 72);
 
     context.strokeStyle = "rgba(0,0,0,0.08)";
