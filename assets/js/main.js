@@ -89,7 +89,7 @@ function setupHeaderMotion() {
     return;
   }
 
-  if (prefersReducedMotion || hasCoarsePointer() || isCompactViewport()) {
+  if (prefersReducedMotion) {
     gsap.set(header, {
       yPercent: 0,
       autoAlpha: 1,
@@ -102,9 +102,19 @@ function setupHeaderMotion() {
   let accumulatedDelta = 0;
   let ticking = false;
   let isHidden = false;
-  const revealThreshold = 18;
-  const hideThreshold = 72;
-  const hideDistanceThreshold = 30;
+
+  const getThresholds = () =>
+    isCompactViewport()
+      ? {
+          revealThreshold: 12,
+          hideThreshold: 36,
+          hideDistanceThreshold: 18,
+        }
+      : {
+          revealThreshold: 18,
+          hideThreshold: 72,
+          hideDistanceThreshold: 30,
+        };
 
   const setHeaderVisible = () => {
     if (!isHidden) {
@@ -160,6 +170,7 @@ function setupHeaderMotion() {
   const updateHeaderState = () => {
     const currentScrollY = window.scrollY;
     const delta = currentScrollY - lastScrollY;
+    const { revealThreshold, hideThreshold, hideDistanceThreshold } = getThresholds();
 
     if (delta > 0) {
       accumulatedDelta = Math.max(0, accumulatedDelta) + delta;
@@ -1833,6 +1844,7 @@ async function setupNoticeBoardHero() {
   }
 
   const boardShell = hero.querySelector(".hero__board-shell");
+  const mobileLogoSlot = hero.querySelector(".hero__logo-slot");
   const noteForm = hero.querySelector("[data-note-form]");
   const noteInput = hero.querySelector("[data-note-input]");
   const noteStatus = hero.querySelector("[data-note-status]");
@@ -2225,6 +2237,11 @@ async function setupNoticeBoardHero() {
   }
 
   function getHeroStageRect() {
+    const mobileLogoStage = getMobileLogoStageRect();
+    if (mobileLogoStage) {
+      return mobileLogoStage;
+    }
+
     const bounds = boardShell?.getBoundingClientRect() ?? hero.getBoundingClientRect();
     const styles = window.getComputedStyle(boardShell || hero);
     const maxInsetX = Math.max(bounds.width * 0.48, 0);
@@ -2276,6 +2293,59 @@ async function setupNoticeBoardHero() {
     };
   }
 
+  function getMobileLogoStageRect() {
+    if (!isCompactViewport() || !mobileLogoSlot) {
+      return null;
+    }
+
+    const shellBounds = boardShell?.getBoundingClientRect() ?? hero.getBoundingClientRect();
+    const slotBounds = mobileLogoSlot.getBoundingClientRect();
+    if (
+      shellBounds.width <= 0 ||
+      shellBounds.height <= 0 ||
+      slotBounds.width < 40 ||
+      slotBounds.height < 24
+    ) {
+      return null;
+    }
+
+    const insetX = Math.min(slotBounds.width * 0.05, 18);
+    const insetY = Math.min(slotBounds.height * 0.16, 14);
+    const leftPx = THREE.MathUtils.clamp(slotBounds.left - shellBounds.left + insetX, 0, shellBounds.width);
+    const rightPx = THREE.MathUtils.clamp(
+      slotBounds.right - shellBounds.left - insetX,
+      0,
+      shellBounds.width
+    );
+    const topPx = THREE.MathUtils.clamp(slotBounds.top - shellBounds.top + insetY, 0, shellBounds.height);
+    const bottomPx = THREE.MathUtils.clamp(
+      slotBounds.bottom - shellBounds.top - insetY,
+      0,
+      shellBounds.height
+    );
+
+    if (rightPx - leftPx < 30 || bottomPx - topPx < 18) {
+      return null;
+    }
+
+    const left = -view.halfWidth + (leftPx / shellBounds.width) * view.width;
+    const right = -view.halfWidth + (rightPx / shellBounds.width) * view.width;
+    const top = view.halfHeight - (topPx / shellBounds.height) * view.height;
+    const bottom = view.halfHeight - (bottomPx / shellBounds.height) * view.height;
+    const centerY = (top + bottom) / 2 - (top - bottom) * 0.18;
+
+    return {
+      left,
+      right,
+      top,
+      bottom,
+      width: right - left,
+      height: top - bottom,
+      centerY,
+      isSlotStage: true,
+    };
+  }
+
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
@@ -2292,14 +2362,17 @@ async function setupNoticeBoardHero() {
       return sum + motion.width / Math.max(motion.height, 0.001);
     }, 0);
     const gap = stage.width * layoutPreset.gap;
+    const stageHeightLimit = stage.isSlotStage
+      ? stage.height * 0.82
+      : stage.height * layoutPreset.maxHeight;
     const rowHeight = Math.min(
-      stage.height * layoutPreset.maxHeight,
+      stageHeightLimit,
       (stage.width * layoutPreset.widthFill - gap * (heroLineKeys.length - 1)) / Math.max(totalAspect, 1)
     );
     const totalWidth =
       rowHeight * totalAspect + gap * (heroLineKeys.length - 1);
     let cursor = stage.left + (stage.width - totalWidth) / 2;
-    const lineY = stage.top - stage.height * layoutPreset.lineY;
+    const lineY = stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
 
     heroLineKeys.forEach((key, index) => {
       const note = heroNoteMeshes.get(key);
