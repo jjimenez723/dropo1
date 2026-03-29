@@ -4,7 +4,7 @@ set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 ENV_FILE=${1:-"$ROOT_DIR/.env"}
-OUTPUT_FILE="$ROOT_DIR/assets/js/site-config.local.js"
+OUTPUT_FILE=${2:-"$ROOT_DIR/assets/js/site-config.local.js"}
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing env file: $ENV_FILE" >&2

@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shop The Drops | DROP 01 Atelier</title>
+    <title>Shop | DROP 01 Atelier</title>
     <meta
       name="description"
-      content="Explore current and upcoming fashion drops from independent designers on DROP 01 Atelier."
+      content="The DROP 01 Atelier shop is coming soon with limited fashion drops, preorder windows, and exclusive access."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,11 +14,12 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="apple-touch-icon" href="favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="dropo1.svg" />
+    <link rel="icon" type="image/png" href="dropo1.png" />
+    <link rel="apple-touch-icon" href="dropo1.png" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
-  <body>
+  <body class="page-shop">
     <header class="site-header">
       <div class="site-header__inner">
         <nav class="site-nav site-nav--left" aria-label="Primary">
@@ -36,287 +37,74 @@
       </div>
     </header>
 
-    <main class="page-main">
-      <section class="section">
-        <div class="section-head section-head--wide reveal">
-          <p class="eyebrow">Shop the drops</p>
-          <h1 class="title-lg">Current and upcoming releases, each open for a brief window.</h1>
-          <p class="lede">
-            Every piece is tied to a limited preorder period or capped run. Quantities are visible,
-            timelines are clear, and the path from desire to purchase stays concise.
-          </p>
-        </div>
-      </section>
+    <main class="page-main page-main--shop">
+      <section class="section shop-soon reveal" data-shop-soon-stage>
+        <div class="shop-soon__glow" aria-hidden="true"></div>
+        <div class="shop-soon__frame">
+          <div class="shop-soon__intro">
+            <p class="eyebrow">Shop / pause</p>
+            <h1 class="title-xl">Coming soon.</h1>
+            <p class="lede">
+              The shop is being rebuilt around the next DROP 01 release. Expect sharper edits,
+              limited preorder windows, and pieces made in response to demand rather than a season
+              calendar.
+            </p>
+            <p class="body-copy">
+              Move your cursor across the page to tease the layout. The light, cards, and labels
+              drift with you to signal that the next drop is already in motion.
+            </p>
+            <div class="button-row">
+              <a class="button" href="index.html#subscribe" data-hover-lift>Join The Waitlist</a>
+              <a class="button-ghost" href="designers.html" data-hover-lift>For Designers</a>
+            </div>
+          </div>
 
-      <section class="section featured-banner reveal" data-shopify-featured>
-        <div>
-          <p class="eyebrow" data-shopify-featured-label>Featured drop</p>
-          <h2 class="title-md" data-shopify-featured-title>Noor Atelier / Veil Trench closes on April 02, 2026.</h2>
-          <p class="body-copy" data-shopify-featured-body>
-            A pearl-black outer layer built with sculpted shoulders, concealed placket, and
-            detachable drape paneling. Produced only against confirmed demand.
-          </p>
-          <div class="button-row">
-            <a class="button" href="#drop-grid" data-shopify-featured-primary data-hover-lift>Shop Current Releases</a>
-            <a class="button-ghost" href="designers.html" data-hover-lift>Launch Your Own Drop</a>
+          <div class="shop-soon__visual">
+            <div class="shop-soon__poster" data-shop-soon-card>
+              <div class="shop-soon__poster-media">
+                <img
+                  src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80"
+                  alt="Editorial fashion moodboard with layered garments"
+                />
+              </div>
+              <div class="shop-soon__poster-copy">
+                <span class="shop-soon__label">Next release</span>
+                <h2>Editorial pieces, small batches, and preorder-first drops.</h2>
+                <p>
+                  A refined storefront is on the way. The next collection will open with a short
+                  access window and close before production begins.
+                </p>
+              </div>
+              <div class="shop-soon__stamp" aria-hidden="true">Coming soon</div>
+              <div class="shop-soon__shine" aria-hidden="true"></div>
+            </div>
+
+            <div class="shop-soon__signals" aria-label="Shop tease">
+              <article class="shop-soon__signal" data-shop-soon-float>
+                <span>Access</span>
+                <strong>Limited</strong>
+              </article>
+              <article class="shop-soon__signal" data-shop-soon-float>
+                <span>Production</span>
+                <strong>Demand-led</strong>
+              </article>
+              <article class="shop-soon__signal" data-shop-soon-float>
+                <span>Release</span>
+                <strong>Preorder</strong>
+              </article>
+            </div>
           </div>
         </div>
-        <div class="featured-banner__metrics">
-          <article class="card">
-            <p class="eyebrow" data-shopify-featured-metric-label="primary">Window</p>
-            <h3 data-shopify-featured-metric-value="primary">72 hours</h3>
-            <p data-shopify-featured-metric-copy="primary">
-              Opens Friday 18:00 ET and closes Sunday night, then moves directly to production.
-            </p>
-          </article>
-          <article class="card">
-            <p class="eyebrow" data-shopify-featured-metric-label="secondary">Run size</p>
-            <h3 data-shopify-featured-metric-value="secondary">60 units max</h3>
-            <p data-shopify-featured-metric-copy="secondary">
-              Once the threshold is reached, preorder access closes to preserve scale and finish.
-            </p>
-          </article>
-        </div>
-      </section>
 
-      <section class="section" id="drop-grid">
-        <div class="section-head reveal">
-          <p class="eyebrow">Available now</p>
-          <h2 class="title-md">A compact floor of designer-led pieces.</h2>
-          <p class="body-copy">
-            Hover a card for alternate views, watch availability update, and reserve pieces before
-            the window disappears.
-          </p>
-        </div>
-
-        <div class="drops-grid" data-shopify-grid="shop" data-shopify-limit="6">
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80"
-                alt="Neutral oversized coat on a model"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate angle of oversized coat"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Isla Ren</span>
-                <strong>$420</strong>
-              </div>
-              <h3>Contour Coat</h3>
-              <p>Architectural wool twill with detachable waist tie and hidden seam pockets.</p>
-              <div class="countdown" data-countdown="2026-04-01T22:00:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="74">
-                <div class="progress-copy">
-                  <strong>74% claimed</strong>
-                  <span>18 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Preorder Now</button>
-                <button class="button-ghost" type="button" data-hover-lift>View Details</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=80"
-                alt="Model in sculptural dress"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate angle of sculptural dress"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Studio Lune</span>
-                <strong>$310</strong>
-              </div>
-              <h3>Halo Dress</h3>
-              <p>Bias-cut silk with an asymmetrical hemline and hidden inner corset structure.</p>
-              <div class="countdown" data-countdown="2026-04-05T20:00:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="58">
-                <div class="progress-copy">
-                  <strong>58% claimed</strong>
-                  <span>31 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Reserve Piece</button>
-                <button class="button-ghost" type="button" data-hover-lift>Lookbook</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1000&q=80"
-                alt="Layered knitwear look in a studio"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate knitwear editorial image"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Vale Common</span>
-                <strong>$215</strong>
-              </div>
-              <h3>Framework Knit</h3>
-              <p>Open-structure alpaca knit with engineered drape and brushed tactile finish.</p>
-              <div class="countdown" data-countdown="2026-04-09T18:30:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="81">
-                <div class="progress-copy">
-                  <strong>81% claimed</strong>
-                  <span>9 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Purchase</button>
-                <button class="button-ghost" type="button" data-hover-lift>Fabric Notes</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?auto=format&fit=crop&w=1000&q=80"
-                alt="Structured blazer in cream fabric"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate blazer angle"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Parallel Form</span>
-                <strong>$360</strong>
-              </div>
-              <h3>Ribbon Blazer</h3>
-              <p>Soft ivory tailoring with extended lapel wrap and removable satin channel ties.</p>
-              <div class="countdown" data-countdown="2026-04-12T18:00:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="42">
-                <div class="progress-copy">
-                  <strong>42% claimed</strong>
-                  <span>37 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Preorder</button>
-                <button class="button-ghost" type="button" data-hover-lift>Story</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1000&q=80"
-                alt="Model wearing layered blouse"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1495385794356-15371f348c31?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate layered blouse image"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Maison Elio</span>
-                <strong>$180</strong>
-              </div>
-              <h3>Ghost Blouse</h3>
-              <p>Sheer layering piece with elongated cuff, weighted hem, and pearl fastening.</p>
-              <div class="countdown" data-countdown="2026-04-16T19:00:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="65">
-                <div class="progress-copy">
-                  <strong>65% claimed</strong>
-                  <span>24 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Reserve</button>
-                <button class="button-ghost" type="button" data-hover-lift>See Styling</button>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media">
-              <img
-                src="https://images.unsplash.com/photo-1521577352947-9bb58764b69a?auto=format&fit=crop&w=1000&q=80"
-                alt="Minimal black garment hanging on rack"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate view of minimal black garment"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Noor Atelier</span>
-                <strong>$490</strong>
-              </div>
-              <h3>Veil Trench</h3>
-              <p>Pearl-black structured outer layer with concealed placket and removable drape panels.</p>
-              <div class="countdown" data-countdown="2026-04-02T21:00:00-04:00">
-                <div><strong data-unit="days">00</strong><span>Days</span></div>
-                <div><strong data-unit="hours">00</strong><span>Hours</span></div>
-                <div><strong data-unit="minutes">00</strong><span>Minutes</span></div>
-                <div><strong data-unit="seconds">00</strong><span>Seconds</span></div>
-              </div>
-              <div class="progress-block" data-progress="88">
-                <div class="progress-copy">
-                  <strong>88% claimed</strong>
-                  <span>7 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-              <div class="drop-actions">
-                <button class="button" type="button" data-hover-lift>Preorder</button>
-                <button class="button-ghost" type="button" data-hover-lift>Fit Notes</button>
-              </div>
-            </div>
-          </article>
+        <div class="shop-soon__ticker" aria-hidden="true">
+          <div class="shop-soon__ticker-track">
+            <span>Coming soon</span>
+            <span>Limited drops</span>
+            <span>Exclusive access</span>
+            <span>Preorder first</span>
+            <span>Independent designers</span>
+            <span>Coming soon</span>
+          </div>
         </div>
       </section>
     </main>
@@ -325,7 +113,7 @@
       <div class="site-footer__brand">
         <a class="brand brand--footer" href="index.html">
           <span class="brand__lockup">
-            <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
+            <img class="brand__logo" src="dropo1.svg" alt="DROP 01 Atelier" />
             <span class="brand__label">Designer-Led Fashion Platform</span>
           </span>
         </a>
@@ -344,8 +132,9 @@
       </nav>
     </footer>
 
-    <script src="assets/js/site-config.js?v=20260328-3"></script>
-    <script src="assets/js/site-config.local.js?v=20260328-3"></script>
-    <script type="module" src="assets/js/main.js?v=20260328-3"></script>
+    <script src="assets/js/site-config.js?v=20260328-4"></script>
+    <script src="assets/js/site-config.public.js?v=20260328-4"></script>
+    <script src="assets/js/site-config.local.js?v=20260328-4"></script>
+    <script type="module" src="assets/js/main.js?v=20260328-4"></script>
   </body>
 </html>

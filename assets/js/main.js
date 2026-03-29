@@ -9,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 const siteConfig = window.DROP01_SITE_CONFIG || {};
+const hideImages = Boolean(siteConfig.hideImages);
 const webhookConfig = siteConfig.webhooks || {};
 const submitTimeoutMs =
   Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs) > 0
@@ -43,9 +44,12 @@ const assetUrls = {
 init();
 
 function init() {
+  applyImageVisibilityMode();
   setupHeaderMotion();
   setupRevealAnimations();
   setupButtonMotion();
+  setupHeroKickerMotion();
+  setupComingSoonShopMotion();
   setupForms();
   hydrateSavedFormDrafts();
   replayPendingWebhookSubmissions();
@@ -55,6 +59,78 @@ function init() {
   setupFloatingSubscribeCard();
   setupMultiStepForm();
   setupNoticeBoardHero();
+}
+
+function applyImageVisibilityMode() {
+  document.body.classList.toggle("images-hidden", hideImages);
+}
+
+function setupHeroKickerMotion() {
+  const kicker = document.querySelector(".hero__kicker");
+  if (!kicker) {
+    return;
+  }
+
+  const text = kicker.textContent?.trim() || "";
+  if (!text) {
+    return;
+  }
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return;
+  }
+
+  kicker.setAttribute("aria-label", text);
+  kicker.textContent = "";
+
+  const wordElements = words.map((word) => {
+    const span = document.createElement("span");
+    span.className = "hero__kicker-word";
+    span.textContent = word;
+    span.setAttribute("aria-hidden", "true");
+    kicker.append(span);
+    return span;
+  });
+
+  if (prefersReducedMotion) {
+    gsap.set(wordElements, { autoAlpha: 1, x: 0, y: 0, letterSpacing: "0.08em" });
+    return;
+  }
+
+  const center = (wordElements.length - 1) / 2;
+  const spreadOffsets = wordElements.map((_, index) => (index - center) * 10);
+  const liftOffsets = wordElements.map((_, index) => (index % 2 === 0 ? -1 : 1) * 4);
+
+  gsap.set(wordElements, {
+    autoAlpha: 0,
+    x: (index) => spreadOffsets[index] * 1.35,
+    y: 18,
+    letterSpacing: "0.2em",
+  });
+
+  gsap.to(wordElements, {
+    autoAlpha: 1,
+    x: 0,
+    y: 0,
+    letterSpacing: "0.08em",
+    duration: 1.05,
+    stagger: 0.08,
+    delay: 0.18,
+    ease: "power3.out",
+    overwrite: "auto",
+  });
+
+  gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } }).to(wordElements, {
+    x: (index) => spreadOffsets[index],
+    y: (index) => liftOffsets[index],
+    letterSpacing: "0.14em",
+    duration: 2.8,
+    stagger: {
+      each: 0.06,
+      from: "center",
+    },
+  });
 }
 
 function setupHeaderMotion() {
@@ -1221,13 +1297,18 @@ function renderProductCard(product) {
     compareAt && compareAt !== price
       ? `<span class="drop-card__compare-price">${escapeHtml(compareAt)}</span>`
       : "";
-
-  return `
-    <article class="drop-card" data-shopify-product-card>
+  const mediaMarkup = hideImages
+    ? ""
+    : `
       <a class="drop-card__media" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer">
         <img src="${escapeHtml(primaryImageUrl)}" alt="${primaryAlt}" loading="lazy" />
         <img src="${escapeHtml(secondaryImageUrl)}" alt="${secondaryAlt}" loading="lazy" />
       </a>
+    `;
+
+  return `
+    <article class="drop-card" data-shopify-product-card>
+      ${mediaMarkup}
       <div class="drop-card__body">
         <div class="drop-card__meta">
           <span>${escapeHtml(product?.vendor || "Independent designer")}</span>
@@ -1372,6 +1453,110 @@ function setupShopMotion() {
       },
     });
   });
+}
+
+function setupComingSoonShopMotion() {
+  const stage = document.querySelector("[data-shop-soon-stage]");
+  if (!stage) {
+    return;
+  }
+
+  const card = stage.querySelector("[data-shop-soon-card]");
+  const floaters = $$("[data-shop-soon-float]", stage);
+  const prefersStatic = prefersReducedMotion;
+
+  const resetMotion = () => {
+    stage.style.setProperty("--spot-x", "50%");
+    stage.style.setProperty("--spot-y", "32%");
+    stage.style.setProperty("--glow-x", "50%");
+    stage.style.setProperty("--glow-y", "32%");
+
+    if (card) {
+      gsap.to(card, {
+        rotateX: 0,
+        rotateY: 0,
+        x: 0,
+        y: 0,
+        duration: 0.55,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    }
+
+    floaters.forEach((floater) => {
+      gsap.to(floater, {
+        x: 0,
+        y: 0,
+        rotate: 0,
+        duration: 0.55,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    });
+  };
+
+  if (prefersStatic) {
+    resetMotion();
+    return;
+  }
+
+  const moveStage = (event) => {
+    const rect = stage.getBoundingClientRect();
+    const pointerX = ((event.clientX - rect.left) / rect.width) * 100;
+    const pointerY = ((event.clientY - rect.top) / rect.height) * 100;
+    const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
+    const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
+
+    stage.style.setProperty("--spot-x", `${pointerX.toFixed(2)}%`);
+    stage.style.setProperty("--spot-y", `${pointerY.toFixed(2)}%`);
+    stage.style.setProperty("--glow-x", `${pointerX.toFixed(2)}%`);
+    stage.style.setProperty("--glow-y", `${pointerY.toFixed(2)}%`);
+
+    if (card) {
+      gsap.to(card, {
+        rotateX: gsap.utils.clamp(-7, 7, normalizedY * -14),
+        rotateY: gsap.utils.clamp(-10, 10, normalizedX * 14),
+        x: normalizedX * 18,
+        y: normalizedY * 14,
+        duration: 0.35,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    }
+
+    floaters.forEach((floater, index) => {
+      const depth = index + 1;
+      gsap.to(floater, {
+        x: normalizedX * (10 + depth * 4),
+        y: normalizedY * (8 + depth * 3),
+        rotate: normalizedX * (4 + depth),
+        duration: 0.42,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    });
+  };
+
+  const onEnter = (event) => {
+    moveStage(event);
+  };
+
+  const onLeave = () => {
+    resetMotion();
+  };
+
+  stage.addEventListener("pointerenter", onEnter);
+  stage.addEventListener("pointermove", moveStage);
+  stage.addEventListener("pointerleave", onLeave);
+  stage.addEventListener("focusin", resetMotion);
+
+  if (document.body.classList.contains("page-shop")) {
+    window.setTimeout(() => {
+      if (!stage.matches(":hover")) {
+        resetMotion();
+      }
+    }, 500);
+  }
 }
 
 function setupModal() {
@@ -1659,6 +1844,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.28,
       widthFill: 0.8,
       gap: 0.022,
+      edgeOffsets: {
+        d: -0.085,
+        r: -0.04,
+        zero: 0.04,
+        one: 0.085,
+      },
       pink: { x: 0.85, y: 0.18, height: 0.24, rotationZ: 0.14, z: 3.02 },
     },
     laptop: {
@@ -1666,6 +1857,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.24,
       widthFill: 0.95,
       gap: 0.018,
+      edgeOffsets: {
+        d: -0.06,
+        r: -0.028,
+        zero: 0.028,
+        one: 0.06,
+      },
       pink: { x: 0.9, y: 0.78, height: 0.2, rotationZ: 0.12, z: 2.98 },
     },
     tablet: {
@@ -1673,6 +1870,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.18,
       widthFill: 0.96,
       gap: 0.014,
+      edgeOffsets: {
+        d: -0.026,
+        r: -0.012,
+        zero: 0.012,
+        one: 0.026,
+      },
       pink: { x: 0.88, y: 0.79, height: 0.18, rotationZ: 0.12, z: 2.94 },
     },
     mobile: {
@@ -1680,6 +1883,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.11,
       widthFill: 0.98,
       gap: 0.01,
+      edgeOffsets: {
+        d: -0.014,
+        r: -0.008,
+        zero: 0.008,
+        one: 0.014,
+      },
       pink: { x: 0.84, y: 0.8, height: 0.16, rotationZ: 0.12, z: 2.9 },
     },
   };
@@ -1986,7 +2195,8 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       const aspect = motion.width / Math.max(motion.height, 0.001);
       const noteWidth = rowHeight * aspect;
-      const centerX = cursor + noteWidth / 2;
+      const edgeOffset = (layoutPreset.edgeOffsets?.[key] || 0) * stage.width;
+      const centerX = cursor + noteWidth / 2 + edgeOffset;
       const z = 3.5 + index * 0.18;
       const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
@@ -2378,8 +2588,7 @@ async function setupNoticeBoardHero() {
     canvasTexture.height = 768;
 
     const context = canvasTexture.getContext("2d");
-    const palette =
-      Math.random() > 0.5 ? ["#eef4f8", "#d7e2ec"] : ["#f7fbff", "#c9d7e3"];
+    const palette = Math.random() > 0.5 ? ["#fff9d8", "#f5e8a4"] : ["#fffdf8", "#f2eee3"];
 
     context.fillStyle = palette[0];
     context.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
@@ -2390,7 +2599,7 @@ async function setupNoticeBoardHero() {
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
 
-    context.fillStyle = "rgba(215, 226, 236, 0.85)";
+    context.fillStyle = "rgba(242, 240, 229, 0.85)";
     context.fillRect(canvasTexture.width * 0.36, 28, canvasTexture.width * 0.28, 72);
 
     context.strokeStyle = "rgba(0,0,0,0.08)";

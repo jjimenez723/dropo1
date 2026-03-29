@@ -1,6 +1,8 @@
 window.DROP01_SITE_CONFIG = {
   ...(window.DROP01_SITE_CONFIG || {}),
   submitTimeoutMs: 10000,
+  // Flip to true to hide non-brand imagery across the site.
+  hideImages: false,
   webhooks: {
     ...(window.DROP01_SITE_CONFIG?.webhooks || {}),
     newsletterSubscribe: "https://your-n8n-domain/webhook/drop01-newsletter-subscribe",

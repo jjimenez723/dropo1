@@ -1,13 +1,18 @@
-window.DROP01_SITE_CONFIG = window.DROP01_SITE_CONFIG || {
+window.DROP01_SITE_CONFIG = {
+  ...(window.DROP01_SITE_CONFIG || {}),
   submitTimeoutMs: 10000,
-  // Flip to true to hide non-brand imagery across the site.
-  hideImages: false,
+  hideImages:
+    typeof window.DROP01_SITE_CONFIG?.hideImages === "boolean"
+      ? window.DROP01_SITE_CONFIG.hideImages
+      : false,
   webhooks: {
+    ...(window.DROP01_SITE_CONFIG?.webhooks || {}),
     newsletterSubscribe: "",
     generalContact: "",
     designerIntake: "",
   },
   shopify: {
+    ...(window.DROP01_SITE_CONFIG?.shopify || {}),
     storeDomain: "",
     storefrontAccessToken: "",
     apiVersion: "2026-01",
