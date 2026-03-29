@@ -1372,8 +1372,20 @@ body.is-dragging-notice-board {
   .hero-note-form,
   .hero-note-form label,
   .hero-note-form__status {
+    pointer-events: none;
+  }
+
+  .hero__headline .button,
+  .hero__headline .button-ghost,
+  .hero__headline a,
+  .hero__headline button,
+  .hero__subscribe-card form,
+  .hero__subscribe-card input,
+  .hero__subscribe-card button,
+  .hero-note-form input,
+  .hero-note-form button {
     pointer-events: auto;
-    touch-action: pan-y;
+    touch-action: manipulation;
   }
 
   .page-main {
