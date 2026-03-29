@@ -9,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 const siteConfig = window.DROP01_SITE_CONFIG || {};
+const hideImages = Boolean(siteConfig.hideImages);
 const webhookConfig = siteConfig.webhooks || {};
 const submitTimeoutMs =
   Number(siteConfig.submitTimeoutMs || siteConfig.formSubmitTimeoutMs) > 0
@@ -21,6 +22,7 @@ const webhookMap = {
   "general-contact": normalizeWebhookUrl(webhookConfig.generalContact),
   "designer-intake": normalizeWebhookUrl(webhookConfig.designerIntake),
 };
+const shopifyConfig = normalizeShopifyConfig(siteConfig.shopify || {});
 
 // The SVG notes live in /dropo1. Using import.meta.url keeps the paths correct
 // even though the module itself sits under assets/js.
@@ -36,22 +38,100 @@ const assetUrls = {
   // Keep a cache-busted URL here so flyer artwork updates show up immediately
   // in the Three.js background layer instead of hanging onto an older texture.
   poster: new URL("../../dropo1/9.svg?rev=flyer-v2", import.meta.url).href,
+  fallbackProduct: new URL("../../logo.png", import.meta.url).href,
 };
 
 init();
 
 function init() {
+  applyImageVisibilityMode();
   setupHeaderMotion();
   setupRevealAnimations();
   setupButtonMotion();
+  setupPanelMediaMotion();
+  setupHeroKickerMotion();
+  setupComingSoonShopMotion();
   setupForms();
   hydrateSavedFormDrafts();
   replayPendingWebhookSubmissions();
   setupShopMotion();
+  void setupShopifyStorefront();
   setupModal();
   setupFloatingSubscribeCard();
   setupMultiStepForm();
   setupNoticeBoardHero();
+}
+
+function applyImageVisibilityMode() {
+  document.body.classList.toggle("images-hidden", hideImages);
+}
+
+function setupHeroKickerMotion() {
+  const kicker = document.querySelector(".hero__kicker");
+  if (!kicker) {
+    return;
+  }
+
+  const text = kicker.textContent?.trim() || "";
+  if (!text) {
+    return;
+  }
+
+  const words = text.split(/\s+/).filter(Boolean);
+  if (!words.length) {
+    return;
+  }
+
+  kicker.setAttribute("aria-label", text);
+  kicker.textContent = "";
+
+  const wordElements = words.map((word) => {
+    const span = document.createElement("span");
+    span.className = "hero__kicker-word";
+    span.textContent = word;
+    span.setAttribute("aria-hidden", "true");
+    kicker.append(span);
+    return span;
+  });
+
+  if (prefersReducedMotion) {
+    gsap.set(wordElements, { autoAlpha: 1, x: 0, y: 0, letterSpacing: "0.08em" });
+    return;
+  }
+
+  const center = (wordElements.length - 1) / 2;
+  const spreadOffsets = wordElements.map((_, index) => (index - center) * 10);
+  const liftOffsets = wordElements.map((_, index) => (index % 2 === 0 ? -1 : 1) * 4);
+
+  gsap.set(wordElements, {
+    autoAlpha: 0,
+    x: (index) => spreadOffsets[index] * 1.35,
+    y: 18,
+    letterSpacing: "0.2em",
+  });
+
+  gsap.to(wordElements, {
+    autoAlpha: 1,
+    x: 0,
+    y: 0,
+    letterSpacing: "0.08em",
+    duration: 1.05,
+    stagger: 0.08,
+    delay: 0.18,
+    ease: "power3.out",
+    overwrite: "auto",
+  });
+
+  gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } }).to(wordElements, {
+    x: (index) => spreadOffsets[index],
+    y: (index) => liftOffsets[index],
+    letterSpacing: "0.14em",
+    duration: 2.8,
+    stagger: {
+      each: 0.06,
+      from: "center",
+    },
+  });
 }
 
 function setupHeaderMotion() {
@@ -65,17 +145,19 @@ function setupHeaderMotion() {
   }
 
   let lastScrollY = window.scrollY;
+  let accumulatedDelta = 0;
   let ticking = false;
   let isHidden = false;
   const revealThreshold = 18;
-  const hideThreshold = 120;
+  const hideThreshold = 72;
+  const hideDistanceThreshold = 30;
 
   const setHeaderVisible = () => {
     if (!isHidden) {
       gsap.to(header, {
         yPercent: 0,
         autoAlpha: 1,
-        backgroundColor: "rgba(255, 255, 255, 0.82)",
+        backgroundColor: "#ffffff",
         boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
         duration: 0.7,
         ease: "power3.out",
@@ -89,7 +171,7 @@ function setupHeaderMotion() {
     gsap.to(header, {
       yPercent: 0,
       autoAlpha: 1,
-      backgroundColor: "rgba(255, 255, 255, 0.82)",
+      backgroundColor: "#ffffff",
       boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
       duration: 0.7,
       ease: "power3.out",
@@ -107,7 +189,7 @@ function setupHeaderMotion() {
     gsap.to(header, {
       yPercent: -115,
       autoAlpha: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.45)",
+      backgroundColor: "rgba(255, 255, 255, 0.96)",
       boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
       duration: 0.58,
       ease: "power2.inOut",
@@ -125,11 +207,20 @@ function setupHeaderMotion() {
     const currentScrollY = window.scrollY;
     const delta = currentScrollY - lastScrollY;
 
+    if (delta > 0) {
+      accumulatedDelta = Math.max(0, accumulatedDelta) + delta;
+    } else if (delta < 0) {
+      accumulatedDelta = Math.min(0, accumulatedDelta) + delta;
+    }
+
     if (currentScrollY <= 24) {
+      accumulatedDelta = 0;
       setHeaderVisible();
-    } else if (delta > revealThreshold && currentScrollY > hideThreshold) {
+    } else if (accumulatedDelta > hideDistanceThreshold && currentScrollY > hideThreshold) {
+      accumulatedDelta = 0;
       setHeaderHidden();
-    } else if (delta < -revealThreshold) {
+    } else if (accumulatedDelta < -revealThreshold) {
+      accumulatedDelta = 0;
       setHeaderVisible();
     }
 
@@ -182,12 +273,17 @@ function setupRevealAnimations() {
   });
 }
 
-function setupButtonMotion() {
+function setupButtonMotion(scope = document) {
   if (prefersReducedMotion) {
     return;
   }
 
-  $$("[data-hover-lift]").forEach((button) => {
+  $$("[data-hover-lift]", scope).forEach((button) => {
+    if (button.dataset.hoverLiftReady === "true") {
+      return;
+    }
+
+    button.dataset.hoverLiftReady = "true";
     button.addEventListener("mouseenter", () => {
       gsap.to(button, { y: -3, duration: 0.22, ease: "power2.out" });
     });
@@ -200,6 +296,67 @@ function setupButtonMotion() {
     button.addEventListener("blur", () => {
       gsap.to(button, { y: 0, duration: 0.22, ease: "power2.out" });
     });
+  });
+}
+
+function setupPanelMediaMotion() {
+  const panels = $$(".panel-media");
+  if (!panels.length) {
+    return;
+  }
+
+  panels.forEach((panel) => {
+    const cover = panel.querySelector(".panel-media__cover");
+    if (!cover || panel.dataset.panelMediaReady === "true") {
+      return;
+    }
+
+    panel.dataset.panelMediaReady = "true";
+
+    if (prefersReducedMotion) {
+      gsap.set(cover, { autoAlpha: 1, scale: 1 });
+      return;
+    }
+
+    gsap.set(cover, { autoAlpha: 1, scale: 1.02, transformOrigin: "center center" });
+
+    gsap.fromTo(
+      cover,
+      { autoAlpha: 0.72, scale: 0.99 },
+      {
+        autoAlpha: 1,
+        scale: 1.04,
+        duration: 1.1,
+        ease: "power4.out",
+        scrollTrigger: {
+          trigger: panel,
+          start: "top 86%",
+        },
+      }
+    );
+
+    const zoomIn = () => {
+      gsap.to(cover, {
+        scale: 1.08,
+        duration: 0.34,
+        ease: "power4.out",
+        overwrite: "auto",
+      });
+    };
+
+    const zoomOut = () => {
+      gsap.to(cover, {
+        scale: 1.02,
+        duration: 0.62,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+    };
+
+    panel.addEventListener("pointerenter", zoomIn);
+    panel.addEventListener("pointerleave", zoomOut);
+    panel.addEventListener("focusin", zoomIn);
+    panel.addEventListener("focusout", zoomOut);
   });
 }
 
@@ -249,6 +406,7 @@ async function submitWebhookForm(form) {
     return;
   }
 
+  syncCustomFieldValidation(form);
   if (!form.reportValidity()) {
     return;
   }
@@ -364,6 +522,189 @@ function normalizeWebhookUrl(value) {
   } catch {
     return "";
   }
+}
+
+function normalizeShopifyConfig(config) {
+  const normalized = config && typeof config === "object" ? config : {};
+  const storeDomain = normalizeShopifyStoreDomain(normalized.storeDomain);
+  const storefrontAccessToken =
+    typeof normalized.storefrontAccessToken === "string"
+      ? normalized.storefrontAccessToken.trim()
+      : "";
+  const apiVersion =
+    typeof normalized.apiVersion === "string" && normalized.apiVersion.trim()
+      ? normalized.apiVersion.trim()
+      : "2026-01";
+
+  return {
+    storeDomain,
+    storefrontAccessToken,
+    apiVersion,
+    collectionHandle: normalizeHandle(normalized.collectionHandle),
+    homeCollectionHandle: normalizeHandle(normalized.homeCollectionHandle),
+    shopCollectionHandle: normalizeHandle(normalized.shopCollectionHandle),
+    featuredProductHandle: normalizeHandle(normalized.featuredProductHandle),
+    homeProductLimit: getPositiveInteger(normalized.homeProductLimit, 3),
+    shopProductLimit: getPositiveInteger(normalized.shopProductLimit, 6),
+    enabled: Boolean(storeDomain && storefrontAccessToken),
+  };
+}
+
+function normalizeShopifyStoreDomain(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const parsed = trimmed.includes("://") ? new URL(trimmed) : new URL(`https://${trimmed}`);
+    return parsed.hostname.replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeHandle(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getPositiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character] || character
+  );
+}
+
+function sanitizeUrl(value, fallback = "#") {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  try {
+    const parsed = new URL(value, window.location.href);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return fallback;
+    }
+
+    return parsed.href;
+  } catch {
+    return fallback;
+  }
+}
+
+function truncateText(value, maxLength = 150) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
+}
+
+function formatMoney(money) {
+  const amount = Number(money?.amount);
+  const currencyCode =
+    typeof money?.currencyCode === "string" && money.currencyCode ? money.currencyCode : "USD";
+
+  if (!Number.isFinite(amount)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currencyCode,
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(amount);
+}
+
+function formatPriceRange(priceRange) {
+  const minimum = formatMoney(priceRange?.minVariantPrice);
+  const maximum = formatMoney(priceRange?.maxVariantPrice);
+
+  if (!minimum && !maximum) {
+    return "";
+  }
+
+  if (!maximum || minimum === maximum) {
+    return minimum || maximum;
+  }
+
+  return `${minimum} - ${maximum}`;
+}
+
+function getProductUrl(product) {
+  return sanitizeUrl(
+    typeof product?.onlineStoreUrl === "string" && product.onlineStoreUrl
+      ? product.onlineStoreUrl
+      : `https://${shopifyConfig.storeDomain}/products/${product?.handle || ""}`
+  );
+}
+
+function getProductSummary(product) {
+  const description = truncateText(product?.description || "", 150);
+  if (description) {
+    return description;
+  }
+
+  return "Limited-run designer piece synced directly from the connected Shopify storefront.";
+}
+
+function getProductImages(product) {
+  const images = Array.isArray(product?.images?.nodes) ? product.images.nodes : [];
+  const featuredImage = product?.featuredImage ? [product.featuredImage] : [];
+  const deduped = [...featuredImage, ...images].filter(
+    (image, index, source) =>
+      image?.url &&
+      source.findIndex((candidate) => candidate?.url === image.url) === index
+  );
+
+  return deduped.slice(0, 2);
+}
+
+function getProductBadgeCopy(product) {
+  const availability = product?.availableForSale ? "Available now" : "Currently sold out";
+  const compareAt = formatMoney(product?.compareAtPriceRange?.maxVariantPrice);
+  const price = formatPriceRange(product?.priceRange);
+
+  if (compareAt && price && compareAt !== price) {
+    return [availability, `Compare at ${compareAt}`];
+  }
+
+  return [availability, "Synced from Shopify"];
+}
+
+function validateSimpleUrlField(field) {
+  if (!(field instanceof HTMLInputElement) || !field.hasAttribute("data-simple-url")) {
+    return true;
+  }
+
+  const trimmed = field.value.trim();
+  const isValid = trimmed === "" || trimmed.includes(".");
+
+  field.setCustomValidity(isValid ? "" : "Enter a link with a dot, like studio.com.");
+  return isValid;
+}
+
+function syncCustomFieldValidation(scope = document) {
+  $$("[data-simple-url]", scope).forEach((field) => {
+    validateSimpleUrlField(field);
+  });
 }
 
 function buildFormPayload(form, webhookKey) {
@@ -716,6 +1057,403 @@ function writeFormDrafts(drafts) {
   }
 }
 
+async function setupShopifyStorefront() {
+  if (!shopifyConfig.enabled) {
+    return;
+  }
+
+  const homeGrid = document.querySelector('[data-shopify-grid="home"]');
+  const shopGrid = document.querySelector('[data-shopify-grid="shop"]');
+  const featuredBanner = document.querySelector("[data-shopify-featured]");
+
+  if (!homeGrid && !shopGrid && !featuredBanner) {
+    return;
+  }
+
+  const sharedCollectionHandle = shopifyConfig.collectionHandle;
+  const homeCollectionHandle = shopifyConfig.homeCollectionHandle || sharedCollectionHandle;
+  const shopCollectionHandle = shopifyConfig.shopCollectionHandle || sharedCollectionHandle;
+  const homeLimit = getPositiveInteger(
+    homeGrid?.getAttribute("data-shopify-limit"),
+    shopifyConfig.homeProductLimit
+  );
+  const shopLimit = getPositiveInteger(
+    shopGrid?.getAttribute("data-shopify-limit"),
+    shopifyConfig.shopProductLimit
+  );
+  const feedCache = new Map();
+  const loadFeed = (collectionHandle, limit) => {
+    const key = `${collectionHandle || "all"}::${limit}`;
+    if (!feedCache.has(key)) {
+      feedCache.set(key, fetchShopifyFeed({ collectionHandle, limit }));
+    }
+
+    return feedCache.get(key);
+  };
+
+  try {
+    const [homeFeed, shopFeed, explicitFeaturedProduct] = await Promise.all([
+      homeGrid ? loadFeed(homeCollectionHandle, homeLimit) : Promise.resolve(null),
+      shopGrid || featuredBanner ? loadFeed(shopCollectionHandle, shopLimit) : Promise.resolve(null),
+      shopifyConfig.featuredProductHandle
+        ? fetchShopifyProductByHandle(shopifyConfig.featuredProductHandle)
+        : Promise.resolve(null),
+    ]);
+
+    if (homeGrid && homeFeed?.products?.length) {
+      renderShopifyGrid(homeGrid, homeFeed.products.slice(0, homeLimit));
+    }
+
+    if (shopGrid && shopFeed?.products?.length) {
+      renderShopifyGrid(shopGrid, shopFeed.products.slice(0, shopLimit));
+    }
+
+    if (featuredBanner) {
+      const featuredProduct =
+        explicitFeaturedProduct ||
+        selectFeaturedProduct(shopFeed?.products) ||
+        selectFeaturedProduct(homeFeed?.products);
+
+      if (featuredProduct) {
+        renderFeaturedProductBanner(featuredBanner, {
+          product: featuredProduct,
+          collectionTitle: shopFeed?.title || homeFeed?.title || "",
+          productCount: shopFeed?.products?.length || homeFeed?.products?.length || 0,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("DROP 01 Shopify storefront sync failed.", error);
+  }
+}
+
+async function fetchShopifyFeed({ collectionHandle = "", limit = 6 }) {
+  if (collectionHandle) {
+    const data = await postShopifyStorefrontQuery(
+      `
+        query Drop01CollectionProducts($handle: String!, $limit: Int!) {
+          collection(handle: $handle) {
+            title
+            handle
+            products(first: $limit) {
+              nodes {
+                id
+                title
+                handle
+                vendor
+                description
+                tags
+                availableForSale
+                onlineStoreUrl
+                featuredImage {
+                  url
+                  altText
+                }
+                images(first: 2) {
+                  nodes {
+                    url
+                    altText
+                  }
+                }
+                priceRange {
+                  minVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                  maxVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+                compareAtPriceRange {
+                  maxVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      { handle: collectionHandle, limit }
+    );
+
+    return {
+      title: data?.collection?.title || "",
+      handle: data?.collection?.handle || collectionHandle,
+      products: Array.isArray(data?.collection?.products?.nodes) ? data.collection.products.nodes : [],
+    };
+  }
+
+  const data = await postShopifyStorefrontQuery(
+    `
+      query Drop01Products($limit: Int!) {
+        products(first: $limit, sortKey: UPDATED_AT, reverse: true) {
+          nodes {
+            id
+            title
+            handle
+            vendor
+            description
+            tags
+            availableForSale
+            onlineStoreUrl
+            featuredImage {
+              url
+              altText
+            }
+            images(first: 2) {
+              nodes {
+                url
+                altText
+              }
+            }
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+              maxVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+            compareAtPriceRange {
+              maxVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+          }
+        }
+      }
+    `,
+    { limit }
+  );
+
+  return {
+    title: "Storefront",
+    handle: "",
+    products: Array.isArray(data?.products?.nodes) ? data.products.nodes : [],
+  };
+}
+
+async function fetchShopifyProductByHandle(handle) {
+  const data = await postShopifyStorefrontQuery(
+    `
+      query Drop01FeaturedProduct($handle: String!) {
+        product(handle: $handle) {
+          id
+          title
+          handle
+          vendor
+          description
+          tags
+          availableForSale
+          onlineStoreUrl
+          featuredImage {
+            url
+            altText
+          }
+          images(first: 2) {
+            nodes {
+              url
+              altText
+            }
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          compareAtPriceRange {
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+    `,
+    { handle }
+  );
+
+  return data?.product || null;
+}
+
+async function postShopifyStorefrontQuery(query, variables = {}) {
+  const response = await fetch(
+    `https://${shopifyConfig.storeDomain}/api/${shopifyConfig.apiVersion}/graphql.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": shopifyConfig.storefrontAccessToken,
+      },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Shopify responded with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (Array.isArray(payload?.errors) && payload.errors.length) {
+    throw new Error(payload.errors.map((error) => error.message).join("; "));
+  }
+
+  return payload?.data || {};
+}
+
+function selectFeaturedProduct(products) {
+  if (!Array.isArray(products) || !products.length) {
+    return null;
+  }
+
+  return (
+    products.find((product) =>
+      Array.isArray(product?.tags) &&
+      product.tags.some((tag) => ["featured", "drop-featured"].includes(String(tag).toLowerCase()))
+    ) || products[0]
+  );
+}
+
+function renderShopifyGrid(grid, products) {
+  if (!Array.isArray(products) || !products.length) {
+    return;
+  }
+
+  grid.innerHTML = products.map((product) => renderProductCard(product)).join("");
+  setupButtonMotion(grid);
+
+  const cards = $$(".drop-card", grid);
+  if (!prefersReducedMotion && cards.length) {
+    gsap.fromTo(
+      cards,
+      { autoAlpha: 0, y: 18 },
+      { autoAlpha: 1, y: 0, duration: 0.58, ease: "power3.out", stagger: 0.08 }
+    );
+  }
+
+  ScrollTrigger.refresh();
+}
+
+function renderProductCard(product) {
+  const productUrl = getProductUrl(product);
+  const [primaryImage, secondaryImage] = getProductImages(product);
+  const primaryImageUrl = sanitizeUrl(primaryImage?.url, assetUrls.fallbackProduct);
+  const secondaryImageUrl = sanitizeUrl(secondaryImage?.url || primaryImage?.url, primaryImageUrl);
+  const primaryAlt = escapeHtml(primaryImage?.altText || product?.title || "DROP 01 product");
+  const secondaryAlt = escapeHtml(secondaryImage?.altText || product?.title || "DROP 01 product detail");
+  const badges = getProductBadgeCopy(product);
+  const price = formatPriceRange(product?.priceRange) || "See store";
+  const compareAt = formatMoney(product?.compareAtPriceRange?.maxVariantPrice);
+  const compareMarkup =
+    compareAt && compareAt !== price
+      ? `<span class="drop-card__compare-price">${escapeHtml(compareAt)}</span>`
+      : "";
+  const mediaMarkup = hideImages
+    ? ""
+    : `
+      <a class="drop-card__media" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer">
+        <img src="${escapeHtml(primaryImageUrl)}" alt="${primaryAlt}" loading="lazy" />
+        <img src="${escapeHtml(secondaryImageUrl)}" alt="${secondaryAlt}" loading="lazy" />
+      </a>
+    `;
+
+  return `
+    <article class="drop-card" data-shopify-product-card>
+      ${mediaMarkup}
+      <div class="drop-card__body">
+        <div class="drop-card__meta">
+          <span>${escapeHtml(product?.vendor || "Independent designer")}</span>
+          <div class="drop-card__price-stack">
+            <strong>${escapeHtml(price)}</strong>
+            ${compareMarkup}
+          </div>
+        </div>
+        <h3>${escapeHtml(product?.title || "Untitled piece")}</h3>
+        <p>${escapeHtml(getProductSummary(product))}</p>
+        <div class="pill-row drop-card__status">
+          ${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}
+        </div>
+        <div class="drop-actions">
+          <a class="button" href="${escapeHtml(productUrl)}" target="_blank" rel="noreferrer" data-hover-lift>
+            ${product?.availableForSale ? "Shop Now" : "View Product"}
+          </a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderFeaturedProductBanner(banner, { product, collectionTitle, productCount }) {
+  const label = banner.querySelector("[data-shopify-featured-label]");
+  const title = banner.querySelector("[data-shopify-featured-title]");
+  const body = banner.querySelector("[data-shopify-featured-body]");
+  const primaryLink = banner.querySelector("[data-shopify-featured-primary]");
+  const primaryMetricLabel = banner.querySelector('[data-shopify-featured-metric-label="primary"]');
+  const primaryMetricValue = banner.querySelector('[data-shopify-featured-metric-value="primary"]');
+  const primaryMetricCopy = banner.querySelector('[data-shopify-featured-metric-copy="primary"]');
+  const secondaryMetricLabel = banner.querySelector('[data-shopify-featured-metric-label="secondary"]');
+  const secondaryMetricValue = banner.querySelector('[data-shopify-featured-metric-value="secondary"]');
+  const secondaryMetricCopy = banner.querySelector('[data-shopify-featured-metric-copy="secondary"]');
+  const productUrl = getProductUrl(product);
+  const price = formatPriceRange(product?.priceRange) || "See store";
+
+  if (label) {
+    label.textContent = collectionTitle ? `${collectionTitle} / Shopify sync` : "Featured drop";
+  }
+
+  if (title) {
+    title.textContent = `${product?.vendor || "Designer"} / ${product?.title || "Featured product"}`;
+  }
+
+  if (body) {
+    body.textContent = getProductSummary(product);
+  }
+
+  if (primaryLink) {
+    primaryLink.textContent = product?.availableForSale ? "Shop Featured Piece" : "View Featured Piece";
+    primaryLink.href = productUrl;
+    primaryLink.target = "_blank";
+    primaryLink.rel = "noreferrer";
+  }
+
+  if (primaryMetricLabel) {
+    primaryMetricLabel.textContent = "Store sync";
+  }
+
+  if (primaryMetricValue) {
+    primaryMetricValue.textContent = `${Math.max(productCount, 1)} live product${Math.max(productCount, 1) === 1 ? "" : "s"}`;
+  }
+
+  if (primaryMetricCopy) {
+    primaryMetricCopy.textContent = "Cards and imagery now refresh from the connected Shopify storefront on page load.";
+  }
+
+  if (secondaryMetricLabel) {
+    secondaryMetricLabel.textContent = "Featured price";
+  }
+
+  if (secondaryMetricValue) {
+    secondaryMetricValue.textContent = price;
+  }
+
+  if (secondaryMetricCopy) {
+    secondaryMetricCopy.textContent = product?.availableForSale
+      ? "Available now in Shopify with live imagery, title, and pricing."
+      : "Product remains visible here even when Shopify marks it unavailable.";
+  }
+}
+
 function updateCountdown(element) {
   const targetDate = element.getAttribute("data-countdown");
   if (!targetDate) {
@@ -777,6 +1515,110 @@ function setupShopMotion() {
       },
     });
   });
+}
+
+function setupComingSoonShopMotion() {
+  const stage = document.querySelector("[data-shop-soon-stage]");
+  if (!stage) {
+    return;
+  }
+
+  const card = stage.querySelector("[data-shop-soon-card]");
+  const floaters = $$("[data-shop-soon-float]", stage);
+  const prefersStatic = prefersReducedMotion;
+
+  const resetMotion = () => {
+    stage.style.setProperty("--spot-x", "50%");
+    stage.style.setProperty("--spot-y", "32%");
+    stage.style.setProperty("--glow-x", "50%");
+    stage.style.setProperty("--glow-y", "32%");
+
+    if (card) {
+      gsap.to(card, {
+        rotateX: 0,
+        rotateY: 0,
+        x: 0,
+        y: 0,
+        duration: 0.55,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    }
+
+    floaters.forEach((floater) => {
+      gsap.to(floater, {
+        x: 0,
+        y: 0,
+        rotate: 0,
+        duration: 0.55,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    });
+  };
+
+  if (prefersStatic) {
+    resetMotion();
+    return;
+  }
+
+  const moveStage = (event) => {
+    const rect = stage.getBoundingClientRect();
+    const pointerX = ((event.clientX - rect.left) / rect.width) * 100;
+    const pointerY = ((event.clientY - rect.top) / rect.height) * 100;
+    const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
+    const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
+
+    stage.style.setProperty("--spot-x", `${pointerX.toFixed(2)}%`);
+    stage.style.setProperty("--spot-y", `${pointerY.toFixed(2)}%`);
+    stage.style.setProperty("--glow-x", `${pointerX.toFixed(2)}%`);
+    stage.style.setProperty("--glow-y", `${pointerY.toFixed(2)}%`);
+
+    if (card) {
+      gsap.to(card, {
+        rotateX: gsap.utils.clamp(-7, 7, normalizedY * -14),
+        rotateY: gsap.utils.clamp(-10, 10, normalizedX * 14),
+        x: normalizedX * 18,
+        y: normalizedY * 14,
+        duration: 0.35,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    }
+
+    floaters.forEach((floater, index) => {
+      const depth = index + 1;
+      gsap.to(floater, {
+        x: normalizedX * (10 + depth * 4),
+        y: normalizedY * (8 + depth * 3),
+        rotate: normalizedX * (4 + depth),
+        duration: 0.42,
+        ease: "power3.out",
+        overwrite: true,
+      });
+    });
+  };
+
+  const onEnter = (event) => {
+    moveStage(event);
+  };
+
+  const onLeave = () => {
+    resetMotion();
+  };
+
+  stage.addEventListener("pointerenter", onEnter);
+  stage.addEventListener("pointermove", moveStage);
+  stage.addEventListener("pointerleave", onLeave);
+  stage.addEventListener("focusin", resetMotion);
+
+  if (document.body.classList.contains("page-shop")) {
+    window.setTimeout(() => {
+      if (!stage.matches(":hover")) {
+        resetMotion();
+      }
+    }, 500);
+  }
 }
 
 function setupModal() {
@@ -900,6 +1742,13 @@ function setupMultiStepForm() {
   const indicators = $$("[data-step-marker]");
   let currentStep = 0;
 
+  form.addEventListener("input", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) {
+      validateSimpleUrlField(target);
+    }
+  });
+
   function renderStep(nextStep) {
     currentStep = Math.max(0, Math.min(nextStep, steps.length - 1));
     steps.forEach((step, index) => {
@@ -933,6 +1782,9 @@ function setupMultiStepForm() {
         (field) => !field.disabled
       );
 
+      currentStepFields.forEach((field) => {
+        validateSimpleUrlField(field);
+      });
       const isValid = currentStepFields.every((field) => field.checkValidity());
       if (!isValid) {
         const firstInvalid = currentStepFields.find((field) => !field.checkValidity());
@@ -1054,6 +1906,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.28,
       widthFill: 0.8,
       gap: 0.022,
+      edgeOffsets: {
+        d: -0.085,
+        r: -0.04,
+        zero: 0.04,
+        one: 0.085,
+      },
       pink: { x: 0.85, y: 0.18, height: 0.24, rotationZ: 0.14, z: 3.02 },
     },
     laptop: {
@@ -1061,6 +1919,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.24,
       widthFill: 0.95,
       gap: 0.018,
+      edgeOffsets: {
+        d: -0.06,
+        r: -0.028,
+        zero: 0.028,
+        one: 0.06,
+      },
       pink: { x: 0.9, y: 0.78, height: 0.2, rotationZ: 0.12, z: 2.98 },
     },
     tablet: {
@@ -1068,6 +1932,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.18,
       widthFill: 0.96,
       gap: 0.014,
+      edgeOffsets: {
+        d: -0.026,
+        r: -0.012,
+        zero: 0.012,
+        one: 0.026,
+      },
       pink: { x: 0.88, y: 0.79, height: 0.18, rotationZ: 0.12, z: 2.94 },
     },
     mobile: {
@@ -1075,6 +1945,12 @@ async function setupNoticeBoardHero() {
       maxHeight: 0.11,
       widthFill: 0.98,
       gap: 0.01,
+      edgeOffsets: {
+        d: -0.014,
+        r: -0.008,
+        zero: 0.008,
+        one: 0.014,
+      },
       pink: { x: 0.84, y: 0.8, height: 0.16, rotationZ: 0.12, z: 2.9 },
     },
   };
@@ -1381,7 +2257,8 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       const aspect = motion.width / Math.max(motion.height, 0.001);
       const noteWidth = rowHeight * aspect;
-      const centerX = cursor + noteWidth / 2;
+      const edgeOffset = (layoutPreset.edgeOffsets?.[key] || 0) * stage.width;
+      const centerX = cursor + noteWidth / 2 + edgeOffset;
       const z = 3.5 + index * 0.18;
       const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 

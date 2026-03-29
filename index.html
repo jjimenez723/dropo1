@@ -14,22 +14,22 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="apple-touch-icon" href="favicon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="dropo1.svg" />
+    <link rel="icon" type="image/png" href="dropo1.png" />
+    <link rel="apple-touch-icon" href="dropo1.png" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260328-5" />
   </head>
   <body class="page-home">
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href="index.html">
-          <span class="brand__lockup">
-            <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
-            <span class="brand__label">Designer-Led Fashion Platform</span>
-          </span>
-        </a>
-        <nav class="site-nav" aria-label="Primary">
+        <nav class="site-nav site-nav--left" aria-label="Primary">
           <a href="#subscribe">Subscribe</a>
           <a href="about.html">About</a>
+        </nav>
+        <a class="brand brand--header" href="index.html" aria-label="DROP 01 Atelier home">
+          <img class="brand__logo" src="dropo1.svg" alt="DROP 01 Atelier" />
+        </a>
+        <nav class="site-nav site-nav--right" aria-label="Primary">
           <a href="shop.html">Shop</a>
           <a href="designers.html">For Designers</a>
           <a href="contact.html">Contact Us</a>
@@ -55,6 +55,10 @@
               <p class="lede">
                 DROP 01 turns those fragments into
                 <strong>limited, preorder-led fashion drops</strong> built around real demand.
+              </p>
+              <p class="lede">
+                Preorder soon for most pieces on the site, with each release opening in a focused
+                window instead of a permanent store.
               </p>
               <div class="button-row">
                 <a class="button" href="shop.html" data-hover-lift>Shop The Drops</a>
@@ -113,8 +117,9 @@
           <p class="eyebrow">Join us today</p>
           <h2 class="title-md">Subscribe for exclusive drops, atelier updates, and early access.</h2>
           <p class="body-copy">
-            Receive first notice when a release opens, along with studio notes from the designers
-            shaping the platform.
+            Receive first notice when a release opens. Most pieces on the site move through
+            preorder windows first, along with studio notes from the designers shaping the
+            platform.
           </p>
         </div>
         <form
@@ -162,7 +167,7 @@
             <h3>Preorders reduce waste before the first full production run even begins.</h3>
             <p>
               Instead of speculative inventory, each drop is calibrated to real appetite, keeping
-              exclusivity high and deadstock low.
+              exclusivity high and deadstock low. Most pieces on the site are preorder-first.
             </p>
             <div class="inline-stat">
               <div>
@@ -191,10 +196,13 @@
 
       <section class="section story-grid">
         <article class="editorial-card editorial-card--stacked reveal">
-          <img
-            src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"
-            alt="Designer wearing sculptural black garments in an editorial setting"
-          />
+          <div class="editorial-card__media panel-media">
+            <span class="panel-media__cover" aria-hidden="true"></span>
+            <img
+              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"
+              alt="Designer wearing sculptural black garments in an editorial setting"
+            />
+          </div>
           <div class="editorial-card__body">
             <p class="eyebrow">Featured release</p>
             <h3>Noor Atelier / Veil Trench</h3>
@@ -228,9 +236,10 @@
           </p>
         </div>
 
-        <div class="drops-grid">
+        <div class="drops-grid" data-shopify-grid="home" data-shopify-limit="3">
           <article class="drop-card reveal">
-            <div class="drop-card__media">
+            <div class="drop-card__media panel-media">
+              <span class="panel-media__cover" aria-hidden="true"></span>
               <img
                 src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80"
                 alt="Neutral oversized coat on a model"
@@ -258,7 +267,8 @@
           </article>
 
           <article class="drop-card reveal">
-            <div class="drop-card__media">
+            <div class="drop-card__media panel-media">
+              <span class="panel-media__cover" aria-hidden="true"></span>
               <img
                 src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=80"
                 alt="Model in sculptural dress"
@@ -286,7 +296,8 @@
           </article>
 
           <article class="drop-card reveal">
-            <div class="drop-card__media">
+            <div class="drop-card__media panel-media">
+              <span class="panel-media__cover" aria-hidden="true"></span>
               <img
                 src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1000&q=80"
                 alt="Layered knitwear look in a studio"
@@ -348,7 +359,7 @@
       <div class="site-footer__brand">
         <a class="brand brand--footer" href="index.html">
           <span class="brand__lockup">
-            <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
+            <img class="brand__logo" src="dropo1.svg" alt="DROP 01 Atelier" />
             <span class="brand__label">Designer-Led Fashion Platform</span>
           </span>
         </a>
@@ -392,8 +403,9 @@
       </div>
     </div>
 
-    <script src="assets/js/site-config.js?v=20260328-2"></script>
-    <script src="assets/js/site-config.local.js?v=20260328-2"></script>
-    <script type="module" src="assets/js/main.js?v=20260328-2"></script>
+    <script src="assets/js/site-config.js?v=20260328-3"></script>
+    <script src="assets/js/site-config.public.js?v=20260328-5"></script>
+    <script src="assets/js/site-config.local.js?v=20260328-4"></script>
+    <script type="module" src="assets/js/main.js?v=20260328-5"></script>
   </body>
 </html>

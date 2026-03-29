@@ -14,22 +14,22 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link rel="apple-touch-icon" href="favicon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="dropo1.svg" />
+    <link rel="icon" type="image/png" href="dropo1.png" />
+    <link rel="apple-touch-icon" href="dropo1.png" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260328-5" />
   </head>
   <body>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="brand" href="index.html">
-          <span class="brand__lockup">
-            <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
-            <span class="brand__label">Designer-Led Fashion Platform</span>
-          </span>
-        </a>
-        <nav class="site-nav" aria-label="Primary">
+        <nav class="site-nav site-nav--left" aria-label="Primary">
           <a href="index.html#subscribe">Subscribe</a>
           <a href="about.html">About</a>
+        </nav>
+        <a class="brand brand--header" href="index.html" aria-label="DROP 01 Atelier home">
+          <img class="brand__logo" src="dropo1.svg" alt="DROP 01 Atelier" />
+        </a>
+        <nav class="site-nav site-nav--right" aria-label="Primary">
           <a href="shop.html">Shop</a>
           <a href="designers.html" aria-current="page">For Designers</a>
           <a href="contact.html">Contact Us</a>
@@ -45,7 +45,8 @@
           <p class="lede">
             DROP 01 supports independent designers with limited, preorder-based drops. We align
             concept refinement, launch strategy, production logistics, and customer fulfillment so
-            the work can stay sharp from first sketch to final shipment.
+            the work can stay sharp from first sketch to final shipment. Most pieces on the site
+            are preorder-first, so launches stay focused and demand-led.
           </p>
         </div>
       </section>
@@ -163,7 +164,18 @@
               </div>
               <div class="field">
                 <label for="designer-portfolio">Portfolio or studio link</label>
-                <input id="designer-portfolio" name="portfolio" type="url" placeholder="https://your-portfolio.com" required />
+                <input
+                  id="designer-portfolio"
+                  name="portfolio"
+                  type="text"
+                  inputmode="url"
+                  autocomplete="url"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  placeholder="your-portfolio.com"
+                  data-simple-url
+                  required
+                />
               </div>
               <div class="field">
                 <label for="designer-location">Studio location</label>
@@ -249,7 +261,7 @@
       <div class="site-footer__brand">
         <a class="brand brand--footer" href="index.html">
           <span class="brand__lockup">
-            <img class="brand__logo" src="logo.png" alt="DROP 01 Atelier" />
+            <img class="brand__logo" src="dropo1.svg" alt="DROP 01 Atelier" />
             <span class="brand__label">Designer-Led Fashion Platform</span>
           </span>
         </a>
@@ -268,8 +280,9 @@
       </nav>
     </footer>
 
-    <script src="assets/js/site-config.js?v=20260328-2"></script>
-    <script src="assets/js/site-config.local.js?v=20260328-2"></script>
-    <script type="module" src="assets/js/main.js?v=20260328-2"></script>
+    <script src="assets/js/site-config.js?v=20260328-3"></script>
+    <script src="assets/js/site-config.public.js?v=20260328-5"></script>
+    <script src="assets/js/site-config.local.js?v=20260328-4"></script>
+    <script type="module" src="assets/js/main.js?v=20260328-5"></script>
   </body>
 </html>
