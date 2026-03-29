@@ -1867,7 +1867,7 @@ async function setupNoticeBoardHero() {
         pixelRatioCap: 1,
         shadows: false,
         shadowMapSize: 0,
-        posterCount: 14,
+        posterCount: 40,
         posterHeight: 1.5,
         motionScale: 0.58,
         frameInterval: 1000 / 30,
@@ -1882,8 +1882,8 @@ async function setupNoticeBoardHero() {
         pixelRatioCap: 1.25,
         shadows: false,
         shadowMapSize: 0,
-        posterCount: 22,
-        posterHeight: 1.8,
+        posterCount: 40,
+        posterHeight: 1.5,
         motionScale: 0.74,
         frameInterval: 1000 / 40,
         textureSize: { width: 768, height: 576 },
@@ -1896,8 +1896,8 @@ async function setupNoticeBoardHero() {
       pixelRatioCap: 1.8,
       shadows: true,
       shadowMapSize: 2048,
-      posterCount: 44,
-      posterHeight: width <= 1300 ? 2.0 : 2.2,
+      posterCount: 70,
+      posterHeight: 2,
       motionScale: 1,
       frameInterval: 1000 / 60,
       textureSize: { width: 1024, height: 768 },
@@ -1974,69 +1974,42 @@ async function setupNoticeBoardHero() {
     yGustInfluence: 0.4,
   };
   const view = { halfHeight: 8, halfWidth: 8, height: 16, width: 16 };
-  const heroLineKeys = ["d", "r", "o", "p", "zero", "one", "orange"];
+  const heroLineKeys = ["d", "r", "o", "p", "zero", "one", "orange", "pink"];
   const heroLogoKeys = new Set(heroLineKeys);
   const heroNoteRotations = {
-    d: -0.08,
-    r: 0.06,
-    o: -0.05,
-    p: 0.07,
-    zero: -0.04,
-    one: 0.05,
-    orange: -0.14,
+    d: -0.04,
+    r: 0.03,
+    o: -0.03,
+    p: 0.03,
+    zero: -0.02,
+    one: 0.02,
+    orange: -0.04,
+    pink: 0.03,
   };
   const heroLayoutPresets = {
     desktop: {
       lineY: 0.62,
       maxHeight: 0.28,
-      widthFill: 0.8,
+      widthFill: 0.9,
       gap: 0.022,
-      edgeOffsets: {
-        d: -0.085,
-        r: -0.04,
-        zero: 0.04,
-        one: 0.085,
-      },
-      pink: { x: 0.85, y: 0.18, rotationZ: 0.14, z: 3.02 },
     },
     laptop: {
       lineY: 0.67,
       maxHeight: 0.24,
-      widthFill: 0.95,
+      widthFill: 0.98,
       gap: 0.018,
-      edgeOffsets: {
-        d: -0.06,
-        r: -0.028,
-        zero: 0.028,
-        one: 0.06,
-      },
-      pink: { x: 0.9, y: 0.78, rotationZ: 0.12, z: 2.98 },
     },
     tablet: {
       lineY: 0.16,
       maxHeight: 0.18,
       widthFill: 0.96,
       gap: 0.014,
-      edgeOffsets: {
-        d: -0.026,
-        r: -0.012,
-        zero: 0.012,
-        one: 0.026,
-      },
-      pink: { x: 0.88, y: 0.79, rotationZ: 0.12, z: 2.94 },
     },
     mobile: {
       lineY: 0.14,
       maxHeight: 0.11,
       widthFill: 0.98,
       gap: 0.01,
-      edgeOffsets: {
-        d: -0.014,
-        r: -0.008,
-        zero: 0.008,
-        one: 0.014,
-      },
-      pink: { x: 0.84, y: 0.8, rotationZ: 0.12, z: 2.9 },
     },
   };
 
@@ -2322,13 +2295,6 @@ async function setupNoticeBoardHero() {
     };
   }
 
-  function getStagePoint(stage, xRatio, yRatio) {
-    return {
-      x: stage.left + stage.width * xRatio,
-      y: stage.top - stage.height * yRatio,
-    };
-  }
-
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
@@ -2363,8 +2329,7 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       const aspect = motion.width / Math.max(motion.height, 0.001);
       const noteWidth = rowHeight * aspect;
-      const edgeOffset = (layoutPreset.edgeOffsets?.[key] || 0) * stage.width;
-      const centerX = cursor + noteWidth / 2 + edgeOffset;
+      const centerX = cursor + noteWidth / 2;
       const z = logoFrontStartZ + index * 0.18;
       const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
@@ -2388,32 +2353,6 @@ async function setupNoticeBoardHero() {
       maxLogoRestZ = Math.max(maxLogoRestZ, z);
       cursor += noteWidth + gap;
     });
-
-    const pinkNote = heroNoteMeshes.get("pink");
-    if (pinkNote && layoutPreset.pink) {
-      const motion = pinkNote.userData.motion;
-      const point = getStagePoint(stage, layoutPreset.pink.x, layoutPreset.pink.y);
-      const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
-
-      motion.restX = point.x;
-      motion.restY = point.y;
-      motion.restZ = layoutPreset.pink.z;
-      motion.homeX = point.x;
-      motion.homeY = point.y;
-      motion.homeZ = layoutPreset.pink.z;
-      motion.restRotationZ = layoutPreset.pink.rotationZ;
-      motion.homeRotationZ = layoutPreset.pink.rotationZ;
-
-      pinkNote.scale.set(scale, scale, 1);
-      pinkNote.renderOrder = Math.round(layoutPreset.pink.z * 10);
-
-      if (!motion.isDragging && !motion.isThrowing) {
-        pinkNote.position.set(point.x, point.y, layoutPreset.pink.z);
-        pinkNote.rotation.z = layoutPreset.pink.rotationZ;
-      }
-
-      maxBoardRestZ = Math.max(maxBoardRestZ, layoutPreset.pink.z);
-    }
 
     boardFrontZ = Math.max(boardFrontZ, maxBoardRestZ);
     logoFrontZ = Math.max(logoFrontZ, maxLogoRestZ);
