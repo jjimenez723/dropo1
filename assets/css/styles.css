@@ -658,6 +658,7 @@ body.images-hidden .shop-soon__poster-copy {
 .hero__board {
   position: absolute;
   inset: 0;
+  contain: paint;
   background:
     radial-gradient(circle at 20% 18%, rgb(var(--accent-rgb) / 0.16), transparent 26%),
     radial-gradient(circle at 86% 14%, rgba(255, 255, 255, 0.08), transparent 24%),
@@ -694,6 +695,8 @@ body.images-hidden .shop-soon__poster-copy {
   display: block;
   touch-action: none;
   cursor: grab;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hero__board canvas.is-dragging {
@@ -1830,17 +1833,17 @@ body.is-dragging-notice-board {
   .hero__board-shell {
     --hero-stage-top: 28px;
     --hero-stage-right: 28px;
-    --hero-stage-bottom: 548px;
+    --hero-stage-bottom: 492px;
     --hero-stage-left: 28px;
-    min-height: 980px;
+    min-height: clamp(820px, 158vw, 920px);
     padding: 22px;
-    padding-bottom: 176px;
+    padding-bottom: 164px;
   }
 
   .hero__overlay {
     flex-direction: column;
     gap: 16px;
-    padding-top: clamp(170px, 36vw, 250px);
+    padding-top: clamp(138px, 30vw, 208px);
   }
 
   .hero__headline {
@@ -1859,6 +1862,13 @@ body.is-dragging-notice-board {
   .hero__subscribe-card,
   .hero-note-form {
     border-radius: 24px;
+  }
+
+  .hero__headline,
+  .hero__subscribe-card,
+  .hero-note-form {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .hero-note-form {
@@ -1940,10 +1950,10 @@ body.is-dragging-notice-board {
   .hero__board-shell {
     --hero-stage-top: 18px;
     --hero-stage-right: 18px;
-    --hero-stage-bottom: 622px;
+    --hero-stage-bottom: 472px;
     --hero-stage-left: 18px;
-    min-height: 1040px;
-    padding: 18px 14px 142px;
+    min-height: clamp(720px, 188vw, 860px);
+    padding: 16px 14px 132px;
   }
 
   .hero__headline,
@@ -1962,7 +1972,14 @@ body.is-dragging-notice-board {
   }
 
   .hero__overlay {
-    padding-top: clamp(148px, 40vw, 220px);
+    padding-top: clamp(108px, 29vw, 156px);
+  }
+
+  .hero__headline,
+  .hero__subscribe-card,
+  .hero-note-form {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .shop-soon__poster-copy {

@@ -7,6 +7,11 @@ gsap.registerPlugin(ScrollTrigger);
 // Shared motion and UI helpers still power the inner pages, while the
 // home page boots an isolated Three.js scene for the physical notice board.
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const mediaQueries = {
+  coarsePointer: window.matchMedia("(pointer: coarse)"),
+  hover: window.matchMedia("(hover: hover)"),
+  compactViewport: window.matchMedia("(max-width: 800px)"),
+};
 const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 const siteConfig = window.DROP01_SITE_CONFIG || {};
 const hideImages = Boolean(siteConfig.hideImages);
@@ -42,6 +47,18 @@ const assetUrls = {
 };
 
 init();
+
+function hasCoarsePointer() {
+  return mediaQueries.coarsePointer.matches;
+}
+
+function canHover() {
+  return mediaQueries.hover.matches;
+}
+
+function isCompactViewport() {
+  return mediaQueries.compactViewport.matches;
+}
 
 function init() {
   applyImageVisibilityMode();
@@ -278,18 +295,24 @@ function setupButtonMotion(scope = document) {
     return;
   }
 
+  const hoverEnabled = canHover() && !hasCoarsePointer();
+
   $$("[data-hover-lift]", scope).forEach((button) => {
     if (button.dataset.hoverLiftReady === "true") {
       return;
     }
 
     button.dataset.hoverLiftReady = "true";
-    button.addEventListener("mouseenter", () => {
-      gsap.to(button, { y: -3, duration: 0.22, ease: "power2.out" });
-    });
-    button.addEventListener("mouseleave", () => {
-      gsap.to(button, { y: 0, duration: 0.22, ease: "power2.out" });
-    });
+
+    if (hoverEnabled) {
+      button.addEventListener("mouseenter", () => {
+        gsap.to(button, { y: -3, duration: 0.22, ease: "power2.out" });
+      });
+      button.addEventListener("mouseleave", () => {
+        gsap.to(button, { y: 0, duration: 0.22, ease: "power2.out" });
+      });
+    }
+
     button.addEventListener("focus", () => {
       gsap.to(button, { y: -2, duration: 0.22, ease: "power2.out" });
     });
@@ -304,6 +327,8 @@ function setupPanelMediaMotion() {
   if (!panels.length) {
     return;
   }
+
+  const hoverEnabled = canHover() && !hasCoarsePointer();
 
   panels.forEach((panel) => {
     const cover = panel.querySelector(".panel-media__cover");
@@ -353,8 +378,10 @@ function setupPanelMediaMotion() {
       });
     };
 
-    panel.addEventListener("pointerenter", zoomIn);
-    panel.addEventListener("pointerleave", zoomOut);
+    if (hoverEnabled) {
+      panel.addEventListener("pointerenter", zoomIn);
+      panel.addEventListener("pointerleave", zoomOut);
+    }
     panel.addEventListener("focusin", zoomIn);
     panel.addEventListener("focusout", zoomOut);
   });
@@ -1525,7 +1552,7 @@ function setupComingSoonShopMotion() {
 
   const card = stage.querySelector("[data-shop-soon-card]");
   const floaters = $$("[data-shop-soon-float]", stage);
-  const prefersStatic = prefersReducedMotion;
+  const prefersStatic = prefersReducedMotion || hasCoarsePointer() || isCompactViewport();
 
   const resetMotion = () => {
     stage.style.setProperty("--spot-x", "50%");
@@ -1823,19 +1850,68 @@ async function setupNoticeBoardHero() {
   const noteForm = hero.querySelector("[data-note-form]");
   const noteInput = hero.querySelector("[data-note-input]");
   const noteStatus = hero.querySelector("[data-note-status]");
+  let heroQuality = getHeroQualityProfile();
+
+  function getHeroQualityProfile() {
+    const width = window.innerWidth;
+    const coarsePointer = hasCoarsePointer();
+
+    if (width <= 560 || coarsePointer) {
+      return {
+        antialias: false,
+        pixelRatioCap: 1,
+        shadows: false,
+        shadowMapSize: 0,
+        posterCount: 14,
+        posterHeightRange: [2.1, 2.85],
+        motionScale: 0.58,
+        frameInterval: 1000 / 30,
+        textureSize: { width: 512, height: 384 },
+        maxAnisotropy: 2,
+      };
+    }
+
+    if (width <= 800) {
+      return {
+        antialias: false,
+        pixelRatioCap: 1.25,
+        shadows: false,
+        shadowMapSize: 0,
+        posterCount: 22,
+        posterHeightRange: [2.25, 3.1],
+        motionScale: 0.74,
+        frameInterval: 1000 / 40,
+        textureSize: { width: 768, height: 576 },
+        maxAnisotropy: 4,
+      };
+    }
+
+    return {
+      antialias: true,
+      pixelRatioCap: 1.8,
+      shadows: true,
+      shadowMapSize: 2048,
+      posterCount: 44,
+      posterHeightRange: [2.4, 3.5],
+      motionScale: 1,
+      frameInterval: 1000 / 60,
+      textureSize: { width: 1024, height: 768 },
+      maxAnisotropy: 8,
+    };
+  }
 
   // The orthographic camera keeps the board feeling flat and graphic, while
   // the note meshes still get real Z-depth for shadows and subtle flutter.
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: heroQuality.antialias,
     alpha: true,
     powerPreference: "high-performance",
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, heroQuality.pixelRatioCap));
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = heroQuality.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
@@ -1848,15 +1924,17 @@ async function setupNoticeBoardHero() {
 
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
   keyLight.position.set(6, 10, 18);
-  keyLight.castShadow = true;
-  keyLight.shadow.mapSize.set(2048, 2048);
-  keyLight.shadow.camera.near = 1;
-  keyLight.shadow.camera.far = 50;
-  keyLight.shadow.camera.left = -18;
-  keyLight.shadow.camera.right = 18;
-  keyLight.shadow.camera.top = 18;
-  keyLight.shadow.camera.bottom = -18;
-  keyLight.shadow.bias = -0.0003;
+  keyLight.castShadow = heroQuality.shadows;
+  if (heroQuality.shadows) {
+    keyLight.shadow.mapSize.set(heroQuality.shadowMapSize, heroQuality.shadowMapSize);
+    keyLight.shadow.camera.near = 1;
+    keyLight.shadow.camera.far = 50;
+    keyLight.shadow.camera.left = -18;
+    keyLight.shadow.camera.right = 18;
+    keyLight.shadow.camera.top = 18;
+    keyLight.shadow.camera.bottom = -18;
+    keyLight.shadow.bias = -0.0003;
+  }
   scene.add(keyLight);
 
   const fillLight = new THREE.DirectionalLight(0xa1bace, 0.52);
@@ -1871,7 +1949,8 @@ async function setupNoticeBoardHero() {
     })
   );
   board.position.set(0, 0, -8);
-  board.receiveShadow = true;
+  board.receiveShadow = heroQuality.shadows;
+  board.visible = heroQuality.shadows;
   scene.add(board);
 
   const textureLoader = new THREE.TextureLoader();
@@ -1968,6 +2047,11 @@ async function setupNoticeBoardHero() {
   let frontZ = 9;
   let rafId = 0;
   let gustResetId = 0;
+  let resizeRafId = 0;
+  let visibilityObserver = null;
+  let heroInView = true;
+  let pageVisible = !document.hidden;
+  let lastRenderTime = 0;
 
   const setGust = gsap.quickTo(scrollState, "gust", {
     duration: 0.45,
@@ -1991,6 +2075,7 @@ async function setupNoticeBoardHero() {
     bindPointerEvents();
     bindNoteForm();
     revealHeroOverlay();
+    observeHeroVisibility();
 
     if (noteInput) {
       noteInput.disabled = false;
@@ -1999,8 +2084,9 @@ async function setupNoticeBoardHero() {
       noteStatus.textContent = "Type a note and pin it to the board.";
     }
 
-    window.addEventListener("resize", resizeScene);
-    rafId = window.requestAnimationFrame(render);
+    window.addEventListener("resize", requestResizeScene, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    syncRenderLoop();
     ScrollTrigger.refresh();
   } catch (error) {
     console.error("DROP 01 notice board failed to initialize.", error);
@@ -2019,7 +2105,10 @@ async function setupNoticeBoardHero() {
         url,
         (texture) => {
           texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          texture.anisotropy = Math.min(
+            renderer.capabilities.getMaxAnisotropy(),
+            heroQuality.maxAnisotropy
+          );
           texture.needsUpdate = true;
           resolve(texture);
         },
@@ -2087,11 +2176,12 @@ async function setupNoticeBoardHero() {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    mesh.castShadow = heroQuality.shadows;
+    mesh.receiveShadow = heroQuality.shadows;
     mesh.position.set(x, y, z);
     mesh.rotation.z = rotationZ;
     mesh.renderOrder = Math.round(z * 10);
+    const motionScale = heroQuality.motionScale;
 
     mesh.userData.motion = {
       restX: x,
@@ -2104,21 +2194,21 @@ async function setupNoticeBoardHero() {
       restRotationZ: rotationZ,
       width,
       height,
-      flutterAmplitude: prefersReducedMotion ? 0 : randomBetween(0.006, 0.028),
+      flutterAmplitude: prefersReducedMotion ? 0 : randomBetween(0.006, 0.028) * motionScale,
       flutterSpeed: randomBetween(0.6, 1.4),
       flutterOffset: randomBetween(0, Math.PI * 2),
-      bobAmplitude: prefersReducedMotion ? 0 : randomBetween(0.01, 0.08),
+      bobAmplitude: prefersReducedMotion ? 0 : randomBetween(0.01, 0.08) * motionScale,
       bobSpeed: randomBetween(0.55, 1.1),
-      driftAmplitude: prefersReducedMotion ? 0 : randomBetween(0.01, 0.06),
+      driftAmplitude: prefersReducedMotion ? 0 : randomBetween(0.01, 0.06) * motionScale,
       driftSpeed: randomBetween(0.4, 0.85),
-      liftRange: randomBetween(0.4, userNote ? 1.4 : 2.2),
-      windDrift: randomBetween(-0.28, 0.28),
-      rollRange: randomBetween(-0.05, 0.08),
-      pitchRange: randomBetween(0.01, 0.12),
-      yawRange: randomBetween(-0.08, 0.08),
-      gustRoll: randomBetween(-0.14, 0.14),
-      gustPitch: randomBetween(0.01, 0.12),
-      gustYaw: randomBetween(-0.08, 0.08),
+      liftRange: randomBetween(0.4, userNote ? 1.4 : 2.2) * motionScale,
+      windDrift: randomBetween(-0.28, 0.28) * motionScale,
+      rollRange: randomBetween(-0.05, 0.08) * motionScale,
+      pitchRange: randomBetween(0.01, 0.12) * motionScale,
+      yawRange: randomBetween(-0.08, 0.08) * motionScale,
+      gustRoll: randomBetween(-0.14, 0.14) * motionScale,
+      gustPitch: randomBetween(0.01, 0.12) * motionScale,
+      gustYaw: randomBetween(-0.08, 0.08) * motionScale,
       isDragging: false,
       isThrowing: false,
       responsive: !userNote,
@@ -2134,12 +2224,12 @@ async function setupNoticeBoardHero() {
   function buildBackgroundLayer(posterTexture) {
     // The poster field should feel dense and imperfect, like a real board that
     // has been layered over time rather than algorithmically tiled.
-    const posterCount = Math.round(44 + Math.min(12, view.width));
+    const posterCount = heroQuality.posterCount;
 
     for (let index = 0; index < posterCount; index += 1) {
       createNoteMesh({
         texture: posterTexture,
-        height: randomBetween(2.4, 3.5),
+        height: randomBetween(...heroQuality.posterHeightRange),
         x: randomBetween(-view.halfWidth * 1.08, view.halfWidth * 1.08),
         y: randomBetween(-view.halfHeight * 1.04, view.halfHeight * 1.06),
         z: randomBetween(-5.5, -0.6),
@@ -2646,8 +2736,12 @@ async function setupNoticeBoardHero() {
 
   function buildCanvasNoteTexture(text) {
     const canvasTexture = document.createElement("canvas");
-    canvasTexture.width = 1024;
-    canvasTexture.height = 768;
+    canvasTexture.width = heroQuality.textureSize.width;
+    canvasTexture.height = heroQuality.textureSize.height;
+    const textureScale = canvasTexture.width / 1024;
+    const frameInset = 16 * textureScale;
+    const headerY = 92 * textureScale;
+    const footerY = canvasTexture.height - 68 * textureScale;
 
     const context = canvasTexture.getContext("2d");
     const palette = Math.random() > 0.5 ? ["#fff9d8", "#f5e8a4"] : ["#fffdf8", "#f2eee3"];
@@ -2662,25 +2756,35 @@ async function setupNoticeBoardHero() {
     context.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
 
     context.fillStyle = "rgba(242, 240, 229, 0.85)";
-    context.fillRect(canvasTexture.width * 0.36, 28, canvasTexture.width * 0.28, 72);
+    context.fillRect(
+      canvasTexture.width * 0.36,
+      28 * textureScale,
+      canvasTexture.width * 0.28,
+      72 * textureScale
+    );
 
     context.strokeStyle = "rgba(0,0,0,0.08)";
-    context.lineWidth = 10;
-    context.strokeRect(16, 16, canvasTexture.width - 32, canvasTexture.height - 32);
+    context.lineWidth = Math.max(4, 10 * textureScale);
+    context.strokeRect(
+      frameInset,
+      frameInset,
+      canvasTexture.width - frameInset * 2,
+      canvasTexture.height - frameInset * 2
+    );
 
     context.fillStyle = "rgba(0,0,0,0.45)";
     context.font =
-      "700 30px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif";
+      `700 ${30 * textureScale}px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif`;
     context.textAlign = "left";
-    context.fillText("PINNED NOTE", 58, 92);
+    context.fillText("PINNED NOTE", 58 * textureScale, headerY);
 
     context.fillStyle = "#141414";
     context.font =
-      "700 98px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif";
+      `700 ${98 * textureScale}px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif`;
     context.textAlign = "center";
 
-    const lines = wrapCanvasText(context, text.toUpperCase(), canvasTexture.width - 160);
-    const lineHeight = 108;
+    const lines = wrapCanvasText(context, text.toUpperCase(), canvasTexture.width - 160 * textureScale);
+    const lineHeight = 108 * textureScale;
     const startY = canvasTexture.height * 0.42 - ((lines.length - 1) * lineHeight) / 2;
 
     lines.forEach((line, index) => {
@@ -2689,8 +2793,8 @@ async function setupNoticeBoardHero() {
 
     context.fillStyle = "rgba(0,0,0,0.44)";
     context.font =
-      "600 28px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif";
-    context.fillText("DRAG IT. THROW IT. MAKE IT REAL.", canvasTexture.width / 2, canvasTexture.height - 68);
+      `600 ${28 * textureScale}px 'Helvetica Neue Condensed', 'Arial Narrow', Arial, sans-serif`;
+    context.fillText("DRAG IT. THROW IT. MAKE IT REAL.", canvasTexture.width / 2, footerY);
 
     const texture = new THREE.CanvasTexture(canvasTexture);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -2723,12 +2827,18 @@ async function setupNoticeBoardHero() {
   }
 
   function resizeScene() {
+    heroQuality = getHeroQualityProfile();
     const bounds = hero.getBoundingClientRect();
     const width = Math.max(bounds.width, 1);
     const height = Math.max(bounds.height, 1);
     const aspect = width / height;
 
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, heroQuality.pixelRatioCap));
     renderer.setSize(width, height, false);
+    renderer.shadowMap.enabled = heroQuality.shadows;
+    keyLight.castShadow = heroQuality.shadows;
+    board.visible = heroQuality.shadows;
+    board.receiveShadow = heroQuality.shadows;
 
     view.height = 16;
     view.width = view.height * aspect;
@@ -2745,6 +2855,8 @@ async function setupNoticeBoardHero() {
 
     noteMeshes.forEach((note) => {
       const motion = note.userData.motion;
+      note.castShadow = heroQuality.shadows;
+      note.receiveShadow = heroQuality.shadows;
       if (!motion.responsive) {
         return;
       }
@@ -2761,7 +2873,78 @@ async function setupNoticeBoardHero() {
     applyHeroNoteLayout();
   }
 
+  function requestResizeScene() {
+    if (resizeRafId) {
+      return;
+    }
+
+    resizeRafId = window.requestAnimationFrame(() => {
+      resizeRafId = 0;
+      resizeScene();
+      ScrollTrigger.refresh();
+    });
+  }
+
+  function observeHeroVisibility() {
+    if ("IntersectionObserver" in window) {
+      visibilityObserver = new IntersectionObserver(
+        (entries) => {
+          heroInView = entries.some((entry) => entry.isIntersecting);
+          syncRenderLoop();
+        },
+        {
+          threshold: 0.02,
+        }
+      );
+
+      visibilityObserver.observe(hero);
+    }
+  }
+
+  function handleVisibilityChange() {
+    pageVisible = !document.hidden;
+    syncRenderLoop();
+  }
+
+  function startRenderLoop() {
+    if (rafId) {
+      return;
+    }
+
+    lastRenderTime = 0;
+    rafId = window.requestAnimationFrame(render);
+  }
+
+  function stopRenderLoop() {
+    if (!rafId) {
+      return;
+    }
+
+    window.cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
+
+  function syncRenderLoop() {
+    if (pageVisible && heroInView) {
+      startRenderLoop();
+      return;
+    }
+
+    stopRenderLoop();
+  }
+
   function render(time) {
+    if (!pageVisible || !heroInView) {
+      rafId = 0;
+      return;
+    }
+
+    if (lastRenderTime && time - lastRenderTime < heroQuality.frameInterval) {
+      rafId = window.requestAnimationFrame(render);
+      return;
+    }
+
+    lastRenderTime = time;
     const elapsed = time * 0.001;
     const gust = scrollState.gust;
     const gustLift = Math.abs(gust);
@@ -2814,14 +2997,17 @@ async function setupNoticeBoardHero() {
   }
 
   window.addEventListener("pagehide", () => {
-    window.cancelAnimationFrame(rafId);
-    window.removeEventListener("resize", resizeScene);
+    stopRenderLoop();
+    window.cancelAnimationFrame(resizeRafId);
+    window.removeEventListener("resize", requestResizeScene);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
     document.body.classList.remove("is-dragging-notice-board");
     canvas.removeEventListener("pointerdown", onPointerDown);
     canvas.removeEventListener("pointermove", onPointerMove);
     canvas.removeEventListener("pointerup", onPointerUp);
     canvas.removeEventListener("pointercancel", onPointerUp);
     canvas.removeEventListener("pointerleave", onPointerUp);
+    visibilityObserver?.disconnect();
     renderer.dispose();
   });
 }
