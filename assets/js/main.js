@@ -1868,7 +1868,7 @@ async function setupNoticeBoardHero() {
         shadows: false,
         shadowMapSize: 0,
         posterCount: 14,
-        posterHeightRange: [2.1, 2.85],
+        posterHeight: 1.5,
         motionScale: 0.58,
         frameInterval: 1000 / 30,
         textureSize: { width: 512, height: 384 },
@@ -1883,7 +1883,7 @@ async function setupNoticeBoardHero() {
         shadows: false,
         shadowMapSize: 0,
         posterCount: 22,
-        posterHeightRange: [2.25, 3.1],
+        posterHeight: 1.8,
         motionScale: 0.74,
         frameInterval: 1000 / 40,
         textureSize: { width: 768, height: 576 },
@@ -1897,7 +1897,7 @@ async function setupNoticeBoardHero() {
       shadows: true,
       shadowMapSize: 2048,
       posterCount: 44,
-      posterHeightRange: [2.4, 3.5],
+      posterHeight: width <= 1300 ? 2.0 : 2.2,
       motionScale: 1,
       frameInterval: 1000 / 60,
       textureSize: { width: 1024, height: 768 },
@@ -1997,7 +1997,7 @@ async function setupNoticeBoardHero() {
         zero: 0.04,
         one: 0.085,
       },
-      pink: { x: 0.85, y: 0.18, height: 0.24, rotationZ: 0.14, z: 3.02 },
+      pink: { x: 0.85, y: 0.18, rotationZ: 0.14, z: 3.02 },
     },
     laptop: {
       lineY: 0.67,
@@ -2010,7 +2010,7 @@ async function setupNoticeBoardHero() {
         zero: 0.028,
         one: 0.06,
       },
-      pink: { x: 0.9, y: 0.78, height: 0.2, rotationZ: 0.12, z: 2.98 },
+      pink: { x: 0.9, y: 0.78, rotationZ: 0.12, z: 2.98 },
     },
     tablet: {
       lineY: 0.16,
@@ -2023,7 +2023,7 @@ async function setupNoticeBoardHero() {
         zero: 0.012,
         one: 0.026,
       },
-      pink: { x: 0.88, y: 0.79, height: 0.18, rotationZ: 0.12, z: 2.94 },
+      pink: { x: 0.88, y: 0.79, rotationZ: 0.12, z: 2.94 },
     },
     mobile: {
       lineY: 0.14,
@@ -2036,7 +2036,7 @@ async function setupNoticeBoardHero() {
         zero: 0.008,
         one: 0.014,
       },
-      pink: { x: 0.84, y: 0.8, height: 0.16, rotationZ: 0.12, z: 2.9 },
+      pink: { x: 0.84, y: 0.8, rotationZ: 0.12, z: 2.9 },
     },
   };
 
@@ -2228,6 +2228,7 @@ async function setupNoticeBoardHero() {
       responsive: !userNote,
       ownsTexture,
       userNote,
+      baseHeight: height,
     };
 
     noteMeshes.push(mesh);
@@ -2243,7 +2244,7 @@ async function setupNoticeBoardHero() {
     for (let index = 0; index < posterCount; index += 1) {
       createNoteMesh({
         texture: posterTexture,
-        height: randomBetween(...heroQuality.posterHeightRange),
+        height: heroQuality.posterHeight,
         x: randomBetween(-view.halfWidth * 1.08, view.halfWidth * 1.08),
         y: randomBetween(-view.halfHeight * 1.04, view.halfHeight * 1.06),
         z: randomBetween(-5.5, -0.6),
@@ -2392,8 +2393,7 @@ async function setupNoticeBoardHero() {
     if (pinkNote && layoutPreset.pink) {
       const motion = pinkNote.userData.motion;
       const point = getStagePoint(stage, layoutPreset.pink.x, layoutPreset.pink.y);
-      const desiredHeight = stage.height * layoutPreset.pink.height;
-      const scale = desiredHeight / Math.max(motion.baseHeight, 0.001);
+      const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
       motion.restX = point.x;
       motion.restY = point.y;
@@ -2420,15 +2420,16 @@ async function setupNoticeBoardHero() {
   }
 
   function buildHeroNotes(textures) {
+    const sharedPaperHeight = 3.18;
     const heroConfigs = [
-      { key: "d", texture: textures.d, height: 3.34 },
-      { key: "r", texture: textures.r, height: 3.3 },
-      { key: "o", texture: textures.o, height: 3.36 },
-      { key: "p", texture: textures.p, height: 3.4 },
-      { key: "zero", texture: textures.zero, height: 3.24 },
-      { key: "one", texture: textures.one, height: 3.18 },
-      { key: "orange", texture: textures.orange, height: 3.15 },
-      { key: "pink", texture: textures.pink, height: 3.04 },
+      { key: "d", texture: textures.d, height: sharedPaperHeight },
+      { key: "r", texture: textures.r, height: sharedPaperHeight },
+      { key: "o", texture: textures.o, height: sharedPaperHeight },
+      { key: "p", texture: textures.p, height: sharedPaperHeight },
+      { key: "zero", texture: textures.zero, height: sharedPaperHeight },
+      { key: "one", texture: textures.one, height: sharedPaperHeight },
+      { key: "orange", texture: textures.orange, height: sharedPaperHeight },
+      { key: "pink", texture: textures.pink, height: sharedPaperHeight },
     ];
 
     heroConfigs.forEach((config, index) => {
@@ -2902,6 +2903,11 @@ async function setupNoticeBoardHero() {
       note.receiveShadow = heroQuality.shadows;
       if (!motion.responsive) {
         return;
+      }
+
+      if (!motion.userNote) {
+        const posterScale = heroQuality.posterHeight / Math.max(motion.baseHeight, 0.001);
+        note.scale.set(posterScale, posterScale, 1);
       }
 
       motion.restX = motion.anchorX * view.halfWidth;
