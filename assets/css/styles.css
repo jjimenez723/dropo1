@@ -1885,7 +1885,7 @@ body.is-dragging-notice-board {
     --hero-stage-left: 28px;
     min-height: clamp(820px, 158vw, 920px);
     padding: 22px;
-    padding-bottom: 164px;
+    padding-bottom: 22px;
   }
 
   .hero__overlay {
@@ -1933,7 +1933,12 @@ body.is-dragging-notice-board {
   }
 
   .hero-note-form {
-    width: calc(100% - 44px);
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: min(460px, 100%);
+    margin: clamp(18px, 4vw, 28px) auto 0;
   }
 
   .subscribe-band,
@@ -2014,7 +2019,7 @@ body.is-dragging-notice-board {
     --hero-stage-bottom: 472px;
     --hero-stage-left: 18px;
     min-height: clamp(720px, 188vw, 860px);
-    padding: 16px 14px 132px;
+    padding: 16px 14px 18px;
   }
 
   .hero__headline,
@@ -2064,8 +2069,7 @@ body.is-dragging-notice-board {
   }
 
   .hero-note-form {
-    width: calc(100% - 28px);
-    bottom: 14px;
+    width: min(100%, 460px);
     padding: 16px 14px;
   }
 

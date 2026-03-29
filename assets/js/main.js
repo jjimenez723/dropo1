@@ -2397,22 +2397,54 @@ async function setupNoticeBoardHero() {
     });
   }
 
+  function syncHeroNoteFormTransform() {
+    if (!noteForm) {
+      return;
+    }
+
+    gsap.set(noteForm, {
+      xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
+    });
+  }
+
   function revealHeroOverlay() {
     if (prefersReducedMotion) {
       return;
     }
 
-    gsap.fromTo(
-      hero.querySelectorAll(".hero__headline, .hero-note-form"),
-      { autoAlpha: 0, y: 20 },
-      {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: "power3.out",
-      }
-    );
+    const headline = hero.querySelector(".hero__headline");
+    if (headline) {
+      gsap.fromTo(
+        headline,
+        { autoAlpha: 0, y: 20 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out",
+        }
+      );
+    }
+
+    if (noteForm) {
+      syncHeroNoteFormTransform();
+      gsap.fromTo(
+        noteForm,
+        {
+          autoAlpha: 0,
+          y: 20,
+          xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
+        },
+        {
+          autoAlpha: 1,
+          y: 0,
+          xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
+          duration: 0.8,
+          delay: 0.08,
+          ease: "power3.out",
+        }
+      );
+    }
   }
 
   function bindPointerEvents() {
@@ -2862,6 +2894,7 @@ async function setupNoticeBoardHero() {
     resizeRafId = window.requestAnimationFrame(() => {
       resizeRafId = 0;
       resizeScene();
+      syncHeroNoteFormTransform();
       ScrollTrigger.refresh();
     });
   }
