@@ -852,9 +852,16 @@ body.images-hidden .shop-soon__poster-copy {
 }
 
 .hero__headline .button-ghost {
-  background: rgb(var(--accent-rgb) / 0.12);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.9);
+  color: #000000;
+}
+
+.hero__headline .button-ghost:hover,
+.hero__headline .button-ghost:focus-visible {
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.9);
+  color: #000000;
 }
 
 .hero__headline .button,
@@ -1066,6 +1073,10 @@ body.is-dragging-notice-board {
 }
 
 .subscribe-band .field label {
+  color: #000;
+}
+
+.subscribe-band .form-note {
   color: #000;
 }
 
@@ -1859,6 +1870,52 @@ body.is-dragging-notice-board {
 
   .shop-soon__visual {
     max-width: 860px;
+  }
+}
+
+@media (min-width: 961px) and (max-width: 1350px) {
+  .shop-soon__frame {
+    grid-template-columns: minmax(0, 0.97fr) minmax(340px, 0.77fr);
+  }
+
+  .shop-soon__intro {
+    grid-column: 2;
+  }
+
+  .shop-soon__visual {
+    grid-column: 1;
+    grid-row: 1;
+    width: min(100%, 648px);
+    max-width: 648px;
+    justify-self: start;
+    gap: 14px;
+  }
+
+  .shop-soon__poster {
+    min-height: clamp(320px, 34vw, 430px);
+    border-radius: 28px;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.12);
+  }
+
+  .shop-soon__poster-media img {
+    transform: scale(1.01);
+  }
+
+  .shop-soon__poster-copy {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .shop-soon__poster-copy h2 {
+    font-size: clamp(1.25rem, 1.7vw, 1.8rem);
+  }
+
+  .shop-soon__poster-copy p {
+    max-width: 32ch;
+    font-size: 0.95rem;
   }
 }
 

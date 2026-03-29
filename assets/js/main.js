@@ -1581,67 +1581,10 @@ function setupComingSoonShopMotion() {
     });
   };
 
+  resetMotion();
+
   if (prefersStatic) {
-    resetMotion();
     return;
-  }
-
-  const moveStage = (event) => {
-    const rect = stage.getBoundingClientRect();
-    const pointerX = ((event.clientX - rect.left) / rect.width) * 100;
-    const pointerY = ((event.clientY - rect.top) / rect.height) * 100;
-    const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
-    const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
-
-    stage.style.setProperty("--spot-x", `${pointerX.toFixed(2)}%`);
-    stage.style.setProperty("--spot-y", `${pointerY.toFixed(2)}%`);
-    stage.style.setProperty("--glow-x", `${pointerX.toFixed(2)}%`);
-    stage.style.setProperty("--glow-y", `${pointerY.toFixed(2)}%`);
-
-    if (card) {
-      gsap.to(card, {
-        rotateX: gsap.utils.clamp(-7, 7, normalizedY * -14),
-        rotateY: gsap.utils.clamp(-10, 10, normalizedX * 14),
-        x: normalizedX * 18,
-        y: normalizedY * 14,
-        duration: 0.35,
-        ease: "power3.out",
-        overwrite: true,
-      });
-    }
-
-    floaters.forEach((floater, index) => {
-      const depth = index + 1;
-      gsap.to(floater, {
-        x: normalizedX * (10 + depth * 4),
-        y: normalizedY * (8 + depth * 3),
-        rotate: normalizedX * (4 + depth),
-        duration: 0.42,
-        ease: "power3.out",
-        overwrite: true,
-      });
-    });
-  };
-
-  const onEnter = (event) => {
-    moveStage(event);
-  };
-
-  const onLeave = () => {
-    resetMotion();
-  };
-
-  stage.addEventListener("pointerenter", onEnter);
-  stage.addEventListener("pointermove", moveStage);
-  stage.addEventListener("pointerleave", onLeave);
-  stage.addEventListener("focusin", resetMotion);
-
-  if (document.body.classList.contains("page-shop")) {
-    window.setTimeout(() => {
-      if (!stage.matches(":hover")) {
-        resetMotion();
-      }
-    }, 500);
   }
 }
 
@@ -1969,6 +1912,7 @@ async function setupNoticeBoardHero() {
   const view = { halfHeight: 8, halfWidth: 8, height: 16, width: 16 };
   const heroLineKeys = ["d", "r", "o", "p", "zero", "one", "orange", "pink"];
   const heroLogoKeys = new Set(heroLineKeys);
+  const heroDetachThresholdMultiplier = 0.52;
   const heroNoteRotations = {
     d: -0.04,
     r: 0.03,
@@ -2188,9 +2132,21 @@ async function setupNoticeBoardHero() {
       gustRoll: randomBetween(-0.14, 0.14) * motionScale,
       gustPitch: randomBetween(0.01, 0.12) * motionScale,
       gustYaw: randomBetween(-0.08, 0.08) * motionScale,
+      logoFloatAmplitudeX: 0,
+      logoFloatAmplitudeY: 0,
+      logoFloatSpeedX: 0,
+      logoFloatSpeedY: 0,
+      logoFloatOffset: randomBetween(0, Math.PI * 2),
+      logoRollRange: 0,
+      logoPitchRange: 0,
+      logoYawRange: 0,
+      logoDepthAmplitude: 0,
       isDragging: false,
       isThrowing: false,
       keepOnTop: false,
+      detachedFromLogo: false,
+      heroLogo: false,
+      heroKey: null,
       responsive: !userNote,
       ownsTexture,
       userNote,
@@ -2352,12 +2308,15 @@ async function setupNoticeBoardHero() {
     let maxLogoRestZ = logoFrontStartZ;
     let maxBoardRestZ = boardFrontStartZ;
 
-    const totalAspect = heroLineKeys.reduce((sum, key) => {
-      const note = heroNoteMeshes.get(key);
-      if (!note) {
-        return sum;
-      }
+    const activeHeroNotes = heroLineKeys
+      .map((key) => [key, heroNoteMeshes.get(key)])
+      .filter((entry) => entry[1] && !entry[1].userData.motion.detachedFromLogo);
 
+    if (!activeHeroNotes.length) {
+      return;
+    }
+
+    const totalAspect = activeHeroNotes.reduce((sum, [, note]) => {
       const motion = note.userData.motion;
       return sum + motion.width / Math.max(motion.height, 0.001);
     }, 0);
@@ -2367,18 +2326,13 @@ async function setupNoticeBoardHero() {
       : stage.height * layoutPreset.maxHeight;
     const rowHeight = Math.min(
       stageHeightLimit,
-      (stage.width * layoutPreset.widthFill - gap * (heroLineKeys.length - 1)) / Math.max(totalAspect, 1)
+      (stage.width * layoutPreset.widthFill - gap * (activeHeroNotes.length - 1)) / Math.max(totalAspect, 1)
     );
-    const totalWidth =
-      rowHeight * totalAspect + gap * (heroLineKeys.length - 1);
+    const totalWidth = rowHeight * totalAspect + gap * (activeHeroNotes.length - 1);
     let cursor = stage.left + (stage.width - totalWidth) / 2;
     const lineY = stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
 
-    heroLineKeys.forEach((key, index) => {
-      const note = heroNoteMeshes.get(key);
-      if (!note) {
-        return;
-      }
+    activeHeroNotes.forEach(([key, note], index) => {
 
       const motion = note.userData.motion;
       const aspect = motion.width / Math.max(motion.height, 0.001);
@@ -2438,6 +2392,18 @@ async function setupNoticeBoardHero() {
       motion.baseHeight = config.height;
       motion.responsive = false;
       motion.keepOnTop = heroLogoKeys.has(config.key);
+      motion.heroLogo = true;
+      motion.heroKey = config.key;
+      motion.logoFloatAmplitudeX = prefersReducedMotion ? 0 : (0.012 + index * 0.0024) * heroQuality.motionScale;
+      motion.logoFloatAmplitudeY =
+        prefersReducedMotion ? 0 : (0.024 + (index % 3) * 0.005) * heroQuality.motionScale;
+      motion.logoFloatSpeedX = 0.24 + index * 0.016;
+      motion.logoFloatSpeedY = 0.31 + index * 0.02;
+      motion.logoFloatOffset = (index / heroConfigs.length) * Math.PI * 1.25;
+      motion.logoRollRange = prefersReducedMotion ? 0 : (0.006 + (index % 2) * 0.003) * heroQuality.motionScale;
+      motion.logoPitchRange = prefersReducedMotion ? 0 : (0.005 + index * 0.0007) * heroQuality.motionScale;
+      motion.logoYawRange = prefersReducedMotion ? 0 : (0.006 + (index % 4) * 0.0018) * heroQuality.motionScale;
+      motion.logoDepthAmplitude = prefersReducedMotion ? 0 : (0.024 + index * 0.0016) * heroQuality.motionScale;
       heroNoteMeshes.set(config.key, note);
     });
 
@@ -2652,14 +2618,18 @@ async function setupNoticeBoardHero() {
 
     const velocity = calculateVelocity();
     if (motion.keepOnTop) {
-      gsap.to(motion, {
-        restX: motion.homeX,
-        restY: motion.homeY,
-        restZ: motion.homeZ,
-        restRotationZ: motion.homeRotationZ,
-        duration: 0.48,
-        ease: "power3.out",
-      });
+      if (shouldDetachHeroNote(releasedNote)) {
+        detachHeroNote(releasedNote);
+      } else {
+        gsap.to(motion, {
+          restX: motion.homeX,
+          restY: motion.homeY,
+          restZ: motion.homeZ,
+          restRotationZ: motion.homeRotationZ,
+          duration: 0.48,
+          ease: "power3.out",
+        });
+      }
     } else if (velocity.length() > 8.5) {
       throwNote(releasedNote, velocity);
     } else {
@@ -2683,6 +2653,47 @@ async function setupNoticeBoardHero() {
     } catch (error) {
       // Pointer capture is best-effort; failed releases are safe to ignore.
     }
+  }
+
+  function shouldDetachHeroNote(note) {
+    const motion = note.userData.motion;
+    if (!motion.keepOnTop || !motion.heroLogo) {
+      return false;
+    }
+
+    const dragDistance = Math.hypot(
+      note.position.x - motion.homeX,
+      note.position.y - motion.homeY
+    );
+    const detachThreshold = Math.max(
+      note.scale.x * motion.width * heroDetachThresholdMultiplier,
+      0.9
+    );
+    return dragDistance >= detachThreshold;
+  }
+
+  function detachHeroNote(note) {
+    const motion = note.userData.motion;
+    motion.keepOnTop = false;
+    motion.detachedFromLogo = true;
+
+    boardFrontZ = Math.min(boardFrontZ + 0.45, logoFrontStartZ - 0.35);
+    note.position.z = boardFrontZ;
+    note.renderOrder = Math.round(boardFrontZ * 10);
+    motion.restX = note.position.x;
+    motion.restY = note.position.y;
+    motion.restZ = boardFrontZ;
+    motion.restRotationZ = note.rotation.z;
+
+    gsap.to(note.rotation, {
+      x: 0,
+      y: 0,
+      duration: 0.35,
+      ease: "power2.out",
+    });
+
+    applyHeroNoteLayout();
+    updateNoteStatus("Letter released. It will keep drifting with the board.");
   }
 
   function calculateVelocity() {
@@ -2759,6 +2770,11 @@ async function setupNoticeBoardHero() {
     gsap.killTweensOf(note.material);
 
     scene.remove(note);
+    const heroKey = note.userData.motion?.heroKey;
+    if (heroKey) {
+      heroNoteMeshes.delete(heroKey);
+      applyHeroNoteLayout();
+    }
     note.geometry.dispose();
 
     if (note.userData.motion?.ownsTexture) {
@@ -3035,6 +3051,13 @@ async function setupNoticeBoardHero() {
     const elapsed = time * 0.001;
     const gust = scrollState.gust;
     const gustLift = Math.abs(gust);
+    const heroLineOffsetX = prefersReducedMotion ? 0 : Math.cos(elapsed * 0.22) * 0.016;
+    const heroLineOffsetY =
+      prefersReducedMotion ? 0 : Math.sin(elapsed * 0.32) * 0.024 + scrollState.progress * 0.18 + gustLift * 0.06;
+    const heroLineTilt =
+      prefersReducedMotion ? 0 : Math.sin(elapsed * 0.27) * 0.006 + scrollState.progress * 0.01 + gust * 0.01;
+    const heroLinePitch = prefersReducedMotion ? 0 : scrollState.progress * 0.008 + gust * 0.01;
+    const heroLineYaw = prefersReducedMotion ? 0 : scrollState.progress * 0.01 + gust * 0.012;
 
     // The render loop combines three layers of motion:
     // 1. a baseline paper flutter
@@ -3043,6 +3066,41 @@ async function setupNoticeBoardHero() {
     noteMeshes.forEach((note) => {
       const motion = note.userData.motion;
       if (motion.isDragging || motion.isThrowing) {
+        return;
+      }
+
+      if (motion.keepOnTop) {
+        const logoDriftX =
+          Math.cos(elapsed * motion.logoFloatSpeedX + motion.logoFloatOffset) *
+            motion.logoFloatAmplitudeX +
+          Math.sin(elapsed * (motion.logoFloatSpeedX * 0.55) + motion.logoFloatOffset * 0.7) *
+            (motion.logoFloatAmplitudeX * 0.45);
+        const logoDriftY =
+          Math.sin(elapsed * motion.logoFloatSpeedY + motion.logoFloatOffset) *
+            motion.logoFloatAmplitudeY +
+          Math.cos(elapsed * (motion.logoFloatSpeedY * 0.6) + motion.logoFloatOffset * 0.6) *
+            (motion.logoFloatAmplitudeY * 0.3);
+        const logoPitch =
+          Math.cos(elapsed * (motion.logoFloatSpeedY * 0.72) + motion.logoFloatOffset) *
+          motion.logoPitchRange;
+        const logoYaw =
+          Math.sin(elapsed * (motion.logoFloatSpeedX * 0.78) + motion.logoFloatOffset * 0.85) *
+          motion.logoYawRange;
+        const logoRoll =
+          Math.sin(elapsed * (motion.logoFloatSpeedX * 0.94) + motion.logoFloatOffset) *
+          motion.logoRollRange;
+
+        // Keep the wordmark aligned as one read, but let each tile breathe a bit
+        // so the movement feels embedded in the board instead of obviously looped.
+        note.position.x = motion.restX + heroLineOffsetX + logoDriftX;
+        note.position.y = motion.restY + heroLineOffsetY + logoDriftY;
+        note.position.z =
+          motion.restZ +
+          Math.sin(elapsed * (motion.logoFloatSpeedY * 0.52) + motion.logoFloatOffset) *
+            motion.logoDepthAmplitude;
+        note.rotation.x = motion.restRotationX + heroLinePitch + logoPitch;
+        note.rotation.y = motion.restRotationY + heroLineYaw + logoYaw;
+        note.rotation.z = motion.restRotationZ + heroLineTilt + logoRoll;
         return;
       }
 
