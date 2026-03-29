@@ -1683,7 +1683,13 @@ body.is-dragging-notice-board {
 
 .subscribe-modal .eyebrow,
 .subscribe-modal .body-copy {
-  color: var(--ink-inverse-muted);
+  color: var(--ink);
+}
+
+.subscribe-modal .field label,
+.subscribe-modal .field input,
+.subscribe-modal .field input::placeholder {
+  color: var(--ink);
 }
 
 .reveal {
