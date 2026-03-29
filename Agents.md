@@ -1,4 +1,21 @@
 Prompt for a Fashion‑Designer Platform Website Inspired by Dropo1
+
+Temporary Merchandising Hold
+
+Do not show mock products right now. The home-page "Featured release" block and the home-page shop-card grid are intentionally hidden until there are real products to display.
+
+Keep this state unless the user explicitly asks to restore live product merchandising.
+
+How to restore product visibility when real products are ready
+
+1. Open `index.html`.
+2. Find `<section class="section story-grid" data-product-preview="featured-release" hidden>` and remove the `hidden` attribute to bring back the featured-release area.
+3. Recreate the removed `.editorial-card__body` inside that featured-release card with real product copy, CTA buttons, and destination links. Do not restore the old placeholder content unless the user explicitly asks for it.
+4. Find `<section class="section" data-product-preview="shop-preview" hidden>` and remove the `hidden` attribute to bring back the home-page shop preview section.
+5. In that same shop preview section, change `data-shopify-grid-disabled="home"` back to `data-shopify-grid="home"` on the `.drops-grid` element so `assets/js/main.js` can repopulate the card grid from Shopify again.
+6. Replace the fallback sample card content in that grid with real product content if needed, or leave the restored Shopify hook in place if the storefront is ready to supply live products.
+7. Confirm that `shop.html` still reflects the intended launch state. If products are live, update the coming-soon copy there or add the live storefront section intentionally instead of reintroducing placeholder cards.
+
 Overview
 
 You are a top‑tier web designer tasked with creating a multi‑page website for a fashion‑designer platform. The goal is to capture the essence of the original Dropo1 site while amplifying its appeal for independent fashion designers. The resulting site should feel luxurious, modern and avant‑garde, with subtle yet polished animations powered by GSAP and/or Three.js. It must clearly showcase the platform’s mission to support designers, encourage visitors to subscribe and purchase pieces, and provide a dedicated section for designers to join or showcase their work.
