@@ -48,6 +48,7 @@ function init() {
   setupHeaderMotion();
   setupRevealAnimations();
   setupButtonMotion();
+  setupPanelMediaMotion();
   setupHeroKickerMotion();
   setupComingSoonShopMotion();
   setupForms();
@@ -295,6 +296,67 @@ function setupButtonMotion(scope = document) {
     button.addEventListener("blur", () => {
       gsap.to(button, { y: 0, duration: 0.22, ease: "power2.out" });
     });
+  });
+}
+
+function setupPanelMediaMotion() {
+  const panels = $$(".panel-media");
+  if (!panels.length) {
+    return;
+  }
+
+  panels.forEach((panel) => {
+    const cover = panel.querySelector(".panel-media__cover");
+    if (!cover || panel.dataset.panelMediaReady === "true") {
+      return;
+    }
+
+    panel.dataset.panelMediaReady = "true";
+
+    if (prefersReducedMotion) {
+      gsap.set(cover, { autoAlpha: 1, scale: 1 });
+      return;
+    }
+
+    gsap.set(cover, { autoAlpha: 1, scale: 1.02, transformOrigin: "center center" });
+
+    gsap.fromTo(
+      cover,
+      { autoAlpha: 0.72, scale: 0.99 },
+      {
+        autoAlpha: 1,
+        scale: 1.04,
+        duration: 1.1,
+        ease: "power4.out",
+        scrollTrigger: {
+          trigger: panel,
+          start: "top 86%",
+        },
+      }
+    );
+
+    const zoomIn = () => {
+      gsap.to(cover, {
+        scale: 1.08,
+        duration: 0.34,
+        ease: "power4.out",
+        overwrite: "auto",
+      });
+    };
+
+    const zoomOut = () => {
+      gsap.to(cover, {
+        scale: 1.02,
+        duration: 0.62,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+    };
+
+    panel.addEventListener("pointerenter", zoomIn);
+    panel.addEventListener("pointerleave", zoomOut);
+    panel.addEventListener("focusin", zoomIn);
+    panel.addEventListener("focusout", zoomOut);
   });
 }
 

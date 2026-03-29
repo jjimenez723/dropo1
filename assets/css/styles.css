@@ -147,6 +147,8 @@ button {
   flex-shrink: 0;
 }
 
+body.images-hidden .panel-media,
+body.images-hidden .panel-media img,
 body.images-hidden .editorial-card img,
 body.images-hidden .shop-soon__poster-media,
 body.images-hidden .drop-card__media {
@@ -330,6 +332,10 @@ body.images-hidden .shop-soon__poster-copy {
 .shop-soon__poster-media {
   position: absolute;
   inset: 0;
+}
+
+.shop-soon__poster-media .panel-media__cover {
+  opacity: 1;
 }
 
 .shop-soon__poster-media img {
@@ -1088,10 +1094,39 @@ body.is-dragging-notice-board {
   min-height: 100%;
 }
 
+.panel-media {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.panel-media__cover {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.12)),
+    url("../../coming sooon 26_0338.svg") center / cover no-repeat;
+  transform: scale(1.02);
+  transform-origin: center;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.panel-media:hover .panel-media__cover,
+.panel-media:focus-within .panel-media__cover,
+.panel-media.is-zooming .panel-media__cover {
+  transform: scale(1.08);
+}
+
 .editorial-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.editorial-card__media {
+  min-height: 320px;
 }
 
 .editorial-card--stacked {
@@ -1235,6 +1270,10 @@ body.is-dragging-notice-board {
   position: relative;
   aspect-ratio: 0.8;
   overflow: hidden;
+}
+
+.drop-card__media .panel-media__cover {
+  opacity: 1;
 }
 
 .drop-card__media img {
