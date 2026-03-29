@@ -1458,7 +1458,7 @@ body.is-dragging-notice-board {
 
 .featured-banner .body-copy,
 .featured-banner .eyebrow {
-  color: var(--ink-inverse-muted);
+  color: #000;
 }
 
 .featured-banner__metrics {
