@@ -6,7 +6,7 @@ window.DROP01_SITE_CONFIG = {
     newsletterSubscribe: "https://n8n.bitesites.org/webhook/Email-Newsletter",
     generalContact: "https://n8n.bitesites.org/webhook/General-Contact-Form",
     designerIntake: "https://n8n.bitesites.org/webhook/Multi-Step-Designer",
-    heroNote: "",
+    heroNote: "https://n8n.bitesites.org/webhook/Pinned-Note",
   },
   shopify: {
     ...(window.DROP01_SITE_CONFIG?.shopify || {}),
