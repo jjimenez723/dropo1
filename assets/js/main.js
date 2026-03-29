@@ -66,7 +66,6 @@ function init() {
   setupRevealAnimations();
   setupButtonMotion();
   setupPanelMediaMotion();
-  setupHeroKickerMotion();
   setupComingSoonShopMotion();
   setupForms();
   hydrateSavedFormDrafts();
@@ -81,74 +80,6 @@ function init() {
 
 function applyImageVisibilityMode() {
   document.body.classList.toggle("images-hidden", hideImages);
-}
-
-function setupHeroKickerMotion() {
-  const kicker = document.querySelector(".hero__kicker");
-  if (!kicker) {
-    return;
-  }
-
-  const text = kicker.textContent?.trim() || "";
-  if (!text) {
-    return;
-  }
-
-  const words = text.split(/\s+/).filter(Boolean);
-  if (!words.length) {
-    return;
-  }
-
-  kicker.setAttribute("aria-label", text);
-  kicker.textContent = "";
-
-  const wordElements = words.map((word) => {
-    const span = document.createElement("span");
-    span.className = "hero__kicker-word";
-    span.textContent = word;
-    span.setAttribute("aria-hidden", "true");
-    kicker.append(span);
-    return span;
-  });
-
-  if (prefersReducedMotion) {
-    gsap.set(wordElements, { autoAlpha: 1, x: 0, y: 0, letterSpacing: "0.08em" });
-    return;
-  }
-
-  const center = (wordElements.length - 1) / 2;
-  const spreadOffsets = wordElements.map((_, index) => (index - center) * 10);
-  const liftOffsets = wordElements.map((_, index) => (index % 2 === 0 ? -1 : 1) * 4);
-
-  gsap.set(wordElements, {
-    autoAlpha: 0,
-    x: (index) => spreadOffsets[index] * 1.35,
-    y: 18,
-    letterSpacing: "0.2em",
-  });
-
-  gsap.to(wordElements, {
-    autoAlpha: 1,
-    x: 0,
-    y: 0,
-    letterSpacing: "0.08em",
-    duration: 1.05,
-    stagger: 0.08,
-    delay: 0.18,
-    ease: "power3.out",
-    overwrite: "auto",
-  });
-
-  gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } }).to(wordElements, {
-    x: (index) => spreadOffsets[index],
-    y: (index) => liftOffsets[index],
-    letterSpacing: "0.14em",
-    duration: 2.8,
-    stagger: {
-      each: 0.06,
-      from: "center",
-    },
-  });
 }
 
 function setupHeaderMotion() {

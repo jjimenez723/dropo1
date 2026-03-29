@@ -765,14 +765,6 @@ body.images-hidden .shop-soon__poster-copy {
   text-wrap: balance;
 }
 
-.hero__kicker-word {
-  display: inline-block;
-  white-space: nowrap;
-  transform: translate3d(0, 0, 0);
-  will-change: transform, letter-spacing, opacity;
-  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
-}
-
 .hero__headline .lede {
   margin: 0;
   font-size: clamp(0.8rem, 0.76rem + 0.2vw, 0.9rem);
