@@ -734,8 +734,8 @@ body.images-hidden .shop-soon__poster-copy {
   max-width: 352px;
   padding: clamp(18px, 2.2vw, 22px);
   border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(160deg, rgba(13, 15, 17, 0.56), rgba(24, 28, 31, 0.34));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, rgba(39, 42, 46, 0.96), rgba(24, 27, 30, 0.92));
   color: #ffffff;
   display: grid;
   gap: 10px;
@@ -743,7 +743,11 @@ body.images-hidden .shop-soon__poster-copy {
 
 .hero__headline .eyebrow,
 .hero__headline .lede {
-  color: rgba(255, 255, 255, 0.76);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.hero__headline .lede strong {
+  color: #ffffff;
 }
 
 .hero__kicker {
