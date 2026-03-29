@@ -11,6 +11,9 @@ Forms already map to these webhook keys:
 - `newsletter-subscribe`
 - `general-contact`
 - `designer-intake`
+- `hero-note` via `webhooks.heroNote`
+
+The frontend submits webhook payloads as `application/x-www-form-urlencoded`, so n8n should read form fields rather than raw JSON.
 
 ## Local setup
 

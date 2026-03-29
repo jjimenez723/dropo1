@@ -6,6 +6,7 @@ window.DROP01_SITE_CONFIG = window.DROP01_SITE_CONFIG || {
     newsletterSubscribe: "",
     generalContact: "",
     designerIntake: "",
+    heroNote: "",
   },
   shopify: {
     storeDomain: "",

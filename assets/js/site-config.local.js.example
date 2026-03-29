@@ -8,6 +8,7 @@ window.DROP01_SITE_CONFIG = {
     newsletterSubscribe: "https://your-n8n-domain/webhook/drop01-newsletter-subscribe",
     generalContact: "https://your-n8n-domain/webhook/drop01-general-contact",
     designerIntake: "https://your-n8n-domain/webhook/drop01-designer-intake",
+    heroNote: "https://your-n8n-domain/webhook/drop01-hero-note",
   },
   shopify: {
     ...(window.DROP01_SITE_CONFIG?.shopify || {}),

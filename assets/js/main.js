@@ -26,6 +26,7 @@ const webhookMap = {
   "newsletter-subscribe": normalizeWebhookUrl(webhookConfig.newsletterSubscribe),
   "general-contact": normalizeWebhookUrl(webhookConfig.generalContact),
   "designer-intake": normalizeWebhookUrl(webhookConfig.designerIntake),
+  "hero-note": normalizeWebhookUrl(webhookConfig.heroNote),
 };
 const shopifyConfig = normalizeShopifyConfig(siteConfig.shopify || {});
 
@@ -675,25 +676,18 @@ function buildFormPayload(form, webhookKey) {
   const fields = Object.fromEntries(
     Array.from(formData.entries(), ([key, value]) => [key, typeof value === "string" ? value.trim() : value])
   );
-  const now = new Date();
-  const isoTimestamp = now.toISOString();
-  const dateSent = formatLocalDate(now);
   const email = typeof fields.email === "string" ? fields.email : "";
   const name = typeof fields.name === "string" ? fields.name : "";
   const message = typeof fields.message === "string" ? fields.message : "";
   const inquiryType = typeof fields.type === "string" ? fields.type : "";
-  const page = window.location.pathname.split("/").pop() || "index.html";
-  const sourceUrl = window.location.href;
+  const context = buildSubmissionContext();
   const normalizedSubmission = {
     formType: webhookKey,
     email,
     name,
     message,
     inquiryType,
-    page,
-    sourceUrl,
-    submittedAt: isoTimestamp,
-    dateSent,
+    ...context,
   };
 
   const flatFields = Object.fromEntries(
@@ -712,20 +706,35 @@ function buildFormPayload(form, webhookKey) {
     message,
     Message: message,
     inquiryType,
+    ...context,
     formType: webhookKey,
-    page,
-    sourceUrl,
-    submittedAt: isoTimestamp,
-    dateSent,
-    "Date Sent": dateSent,
+    "Date Sent": context.dateSent,
     fieldsJson: JSON.stringify(flatFields),
     submissionJson: JSON.stringify(normalizedSubmission),
-    metadataJson: JSON.stringify({
-      page,
-      sourceUrl,
-      submittedAt: isoTimestamp,
-      dateSent,
-    }),
+    metadataJson: JSON.stringify(context),
+  };
+}
+
+function buildHeroNotePayload(note) {
+  const trimmedNote = note.trim();
+  const context = buildSubmissionContext();
+  const normalizedSubmission = {
+    formType: "hero-note",
+    note: trimmedNote,
+    message: trimmedNote,
+    ...context,
+  };
+
+  return {
+    note: trimmedNote,
+    Note: trimmedNote,
+    message: trimmedNote,
+    Message: trimmedNote,
+    ...context,
+    formType: "hero-note",
+    "Date Sent": context.dateSent,
+    metadataJson: JSON.stringify(context),
+    submissionJson: JSON.stringify(normalizedSubmission),
   };
 }
 
@@ -823,6 +832,47 @@ function formatLocalDate(value) {
   const day = String(value.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function buildSubmissionContext(now = new Date()) {
+  const url = new URL(window.location.href);
+  const utmParams = url.searchParams;
+  const timezone = (() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    } catch {
+      return "";
+    }
+  })();
+  const screenWidth =
+    typeof window.screen?.width === "number" && Number.isFinite(window.screen.width)
+      ? window.screen.width
+      : 0;
+  const screenHeight =
+    typeof window.screen?.height === "number" && Number.isFinite(window.screen.height)
+      ? window.screen.height
+      : 0;
+  const viewportWidth = Number.isFinite(window.innerWidth) ? window.innerWidth : 0;
+  const viewportHeight = Number.isFinite(window.innerHeight) ? window.innerHeight : 0;
+
+  return {
+    page: window.location.pathname.split("/").pop() || "index.html",
+    sourceUrl: window.location.href,
+    referrer: document.referrer || "",
+    language: navigator.language || "",
+    timezone,
+    submittedAt: now.toISOString(),
+    dateSent: formatLocalDate(now),
+    viewportWidth,
+    viewportHeight,
+    screenWidth,
+    screenHeight,
+    utmSource: utmParams.get("utm_source") || "",
+    utmMedium: utmParams.get("utm_medium") || "",
+    utmCampaign: utmParams.get("utm_campaign") || "",
+    utmContent: utmParams.get("utm_content") || "",
+    utmTerm: utmParams.get("utm_term") || "",
+  };
 }
 
 function isCrossOriginRequest(url) {
@@ -2389,6 +2439,18 @@ async function setupNoticeBoardHero() {
       addUserNote(text);
       noteInput.value = "";
       updateNoteStatus("Pinned to the board.");
+
+      const webhookUrl = webhookMap["hero-note"];
+      if (!webhookUrl) {
+        console.warn("DROP 01 hero note webhook is not configured; note stayed local only.");
+        return;
+      }
+
+      const payload = buildHeroNotePayload(text);
+      void postJson(webhookUrl, payload).catch((error) => {
+        console.error("DROP 01 hero note submission failed.", error);
+        updateNoteStatus("Pinned to the board. Remote sync unavailable right now.");
+      });
     });
   }
 

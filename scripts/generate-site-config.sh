@@ -59,6 +59,7 @@ normalize_positive_integer() {
 NEWSLETTER_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_NEWSLETTER_SUBSCRIBE_WEBHOOK_URL:-}")")
 CONTACT_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_GENERAL_CONTACT_WEBHOOK_URL:-}")")
 DESIGNER_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_DESIGNER_INTAKE_WEBHOOK_URL:-}")")
+HERO_NOTE_URL=$(escape_js_string "$(normalize_webhook_url "${DROP01_N8N_HERO_NOTE_WEBHOOK_URL:-}")")
 TIMEOUT_MS=${DROP01_FORM_SUBMIT_TIMEOUT_MS:-10000}
 SHOPIFY_STORE_DOMAIN=$(escape_js_string "${DROP01_SHOPIFY_STORE_DOMAIN:-}")
 SHOPIFY_STOREFRONT_ACCESS_TOKEN=$(escape_js_string "${DROP01_SHOPIFY_STOREFRONT_ACCESS_TOKEN:-}")
@@ -79,6 +80,7 @@ window.DROP01_SITE_CONFIG = {
     newsletterSubscribe: "$NEWSLETTER_URL",
     generalContact: "$CONTACT_URL",
     designerIntake: "$DESIGNER_URL",
+    heroNote: "$HERO_NOTE_URL",
   },
   shopify: {
     ...(window.DROP01_SITE_CONFIG?.shopify || {}),
