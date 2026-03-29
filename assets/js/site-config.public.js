@@ -1,15 +1,11 @@
 window.DROP01_SITE_CONFIG = {
   ...(window.DROP01_SITE_CONFIG || {}),
   submitTimeoutMs: 10000,
-  hideImages:
-    typeof window.DROP01_SITE_CONFIG?.hideImages === "boolean"
-      ? window.DROP01_SITE_CONFIG.hideImages
-      : false,
   webhooks: {
     ...(window.DROP01_SITE_CONFIG?.webhooks || {}),
-    newsletterSubscribe: "",
-    generalContact: "",
-    designerIntake: "",
+    newsletterSubscribe: "https://n8n.bitesites.org/webhook/Email-Newsletter",
+    generalContact: "https://n8n.bitesites.org/webhook/General-Contact-Form",
+    designerIntake: "https://n8n.bitesites.org/webhook/Multi-Step-Designer",
   },
   shopify: {
     ...(window.DROP01_SITE_CONFIG?.shopify || {}),
