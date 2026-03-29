@@ -102,8 +102,8 @@ button {
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(18px);
-  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  background: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   will-change: transform, opacity, background-color, box-shadow;
 }
@@ -112,10 +112,11 @@ button {
   width: var(--container);
   min-height: var(--nav-height);
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 18px;
+  padding: 10px 0;
 }
 
 .site-header.is-hidden {
@@ -131,6 +132,12 @@ button {
   font-size: 0.78rem;
 }
 
+.brand--header {
+  justify-self: center;
+  align-items: center;
+  gap: 0;
+}
+
 .brand__lockup {
   display: inline-flex;
   align-items: center;
@@ -139,7 +146,7 @@ button {
 
 .brand__logo {
   display: block;
-  width: clamp(56px, 6vw, 84px);
+  width: clamp(88px, 8vw, 124px);
   height: auto;
   flex-shrink: 0;
 }
@@ -155,17 +162,29 @@ button {
 .site-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 20px;
   justify-content: flex-end;
   align-items: center;
 }
 
+.site-nav--left {
+  justify-self: end;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.site-nav--right {
+  justify-self: start;
+  justify-content: flex-start;
+  padding-top: 12px;
+}
+
 .site-nav a {
   position: relative;
-  font-size: 0.92rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  padding: 10px 0 16px;
+  letter-spacing: 0.24em;
+  padding: 8px 0 12px;
 }
 
 .site-nav a::after {
@@ -1304,18 +1323,15 @@ body.is-dragging-notice-board {
 
 @media (max-width: 1350px) {
   .site-header__inner {
-    padding: 18px 0;
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .brand__label {
-    max-width: none;
+    gap: 14px;
   }
 
   .site-nav {
-    justify-content: flex-start;
-    gap: 12px 16px;
+    gap: 14px 16px;
+  }
+
+  .brand__logo {
+    width: clamp(80px, 8.5vw, 112px);
   }
 
   .hero {
@@ -1364,6 +1380,28 @@ body.is-dragging-notice-board {
 @media (max-width: 800px) {
   :root {
     --container: min(100vw - 28px, 1180px);
+  }
+
+  .site-header__inner {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 8px;
+    padding: 14px 0 12px;
+  }
+
+  .site-nav--left,
+  .site-nav--right {
+    justify-self: center;
+    justify-content: center;
+    padding-top: 0;
+  }
+
+  .site-nav {
+    gap: 10px 14px;
+  }
+
+  .site-nav a {
+    font-size: 0.68rem;
   }
 
   .hero__overlay,
@@ -1458,13 +1496,17 @@ body.is-dragging-notice-board {
 }
 
 @media (max-width: 560px) {
-  .brand__lockup {
-    gap: 10px;
+  .brand__logo {
+    width: clamp(76px, 28vw, 98px);
   }
 
-  .brand__label {
-    letter-spacing: 0.18em;
-    font-size: 0.7rem;
+  .site-nav {
+    gap: 8px 12px;
+  }
+
+  .site-nav a {
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
   }
 
   .hero__board-shell {

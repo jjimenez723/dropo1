@@ -77,7 +77,7 @@ function setupHeaderMotion() {
       gsap.to(header, {
         yPercent: 0,
         autoAlpha: 1,
-        backgroundColor: "rgba(255, 255, 255, 0.82)",
+        backgroundColor: "#ffffff",
         boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
         duration: 0.7,
         ease: "power3.out",
@@ -91,7 +91,7 @@ function setupHeaderMotion() {
     gsap.to(header, {
       yPercent: 0,
       autoAlpha: 1,
-      backgroundColor: "rgba(255, 255, 255, 0.82)",
+      backgroundColor: "#ffffff",
       boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
       duration: 0.7,
       ease: "power3.out",
@@ -109,7 +109,7 @@ function setupHeaderMotion() {
     gsap.to(header, {
       yPercent: -115,
       autoAlpha: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.45)",
+      backgroundColor: "rgba(255, 255, 255, 0.96)",
       boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
       duration: 0.58,
       ease: "power2.inOut",
