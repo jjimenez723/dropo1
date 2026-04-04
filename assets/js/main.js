@@ -67,7 +67,6 @@ function init() {
   setupRevealAnimations();
   setupButtonMotion();
   setupPanelMediaMotion();
-  setupComingSoonShopMotion();
   setupForms();
   hydrateSavedFormDrafts();
   replayPendingWebhookSubmissions();
@@ -1539,53 +1538,6 @@ function setupShopMotion() {
       },
     });
   });
-}
-
-function setupComingSoonShopMotion() {
-  const stage = document.querySelector("[data-shop-soon-stage]");
-  if (!stage) {
-    return;
-  }
-
-  const card = stage.querySelector("[data-shop-soon-card]");
-  const floaters = $$("[data-shop-soon-float]", stage);
-  const prefersStatic = prefersReducedMotion || hasCoarsePointer() || isCompactViewport();
-
-  const resetMotion = () => {
-    stage.style.setProperty("--spot-x", "50%");
-    stage.style.setProperty("--spot-y", "32%");
-    stage.style.setProperty("--glow-x", "50%");
-    stage.style.setProperty("--glow-y", "32%");
-
-    if (card) {
-      gsap.to(card, {
-        rotateX: 0,
-        rotateY: 0,
-        x: 0,
-        y: 0,
-        duration: 0.55,
-        ease: "power3.out",
-        overwrite: true,
-      });
-    }
-
-    floaters.forEach((floater) => {
-      gsap.to(floater, {
-        x: 0,
-        y: 0,
-        rotate: 0,
-        duration: 0.55,
-        ease: "power3.out",
-        overwrite: true,
-      });
-    });
-  };
-
-  resetMotion();
-
-  if (prefersStatic) {
-    return;
-  }
 }
 
 function setupModal() {

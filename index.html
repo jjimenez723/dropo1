@@ -17,7 +17,7 @@
     <link rel="icon" type="image/svg+xml" href="dropo1.svg" />
     <link rel="icon" type="image/png" href="dropo1.png" />
     <link rel="apple-touch-icon" href="dropo1.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260328-5" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260328-6" />
   </head>
   <body class="page-home">
     <header class="site-header">
@@ -129,8 +129,8 @@
         </div>
       </section>
 
-      <section class="section subscribe-band reveal" id="subscribe">
-        <div class="section-head">
+      <section class="section home-section home-section--subscribe" id="subscribe">
+        <div class="home-section__intro">
           <p class="eyebrow">Join us today</p>
           <h2 class="title-md">Subscribe for exclusive drops, atelier updates, and early access.</h2>
           <p class="body-copy">
@@ -140,7 +140,7 @@
           </p>
         </div>
         <form
-          class="subscribe-form"
+          class="subscribe-form home-subscribe-form"
           data-webhook-form="newsletter-subscribe"
           data-success-message="You are on the list for the next limited release."
         >
@@ -148,13 +148,13 @@
             <label for="subscribe-email">Email address</label>
             <input id="subscribe-email" name="email" type="email" placeholder="your@email.com" required />
           </div>
-          <button class="button" type="submit" data-hover-lift>Let’s go</button>
+          <button class="button" type="submit">Let's go</button>
           <p class="form-note">No spam. Only new drops, capsule previews, and designer stories.</p>
         </form>
       </section>
 
-      <section class="section">
-        <div class="section-head reveal">
+      <section class="section home-section">
+        <div class="home-section__intro">
           <p class="eyebrow">What the platform does</p>
           <h2 class="title-lg">A release system built around independent fashion, not the old calendar.</h2>
           <p class="body-copy">
@@ -163,201 +163,110 @@
           </p>
         </div>
 
-        <div class="value-grid">
-          <article class="card reveal">
+        <div class="home-simple-grid" aria-label="Platform services">
+          <article class="home-simple-card">
             <p class="eyebrow">01 / Designer-first</p>
             <h3>We protect the idea while shaping it into a product people can preorder.</h3>
             <p>
               Sampling, production planning, pricing, and launch storytelling are handled with the
               designer, not around them.
             </p>
-            <div class="inline-stat">
-              <div>
-                <strong>Small batch</strong>
-                <span>only produce what demand supports</span>
-              </div>
-            </div>
+            <p class="home-simple-meta">Small batch / only produce what demand supports</p>
           </article>
 
-          <article class="card reveal">
+          <article class="home-simple-card">
             <p class="eyebrow">02 / Sustainable by structure</p>
             <h3>Preorders reduce waste before the first full production run even begins.</h3>
             <p>
               Instead of speculative inventory, each drop is calibrated to real appetite, keeping
               exclusivity high and deadstock low. Most pieces on the site are preorder-first.
             </p>
-            <div class="inline-stat">
-              <div>
-                <strong>Made on demand</strong>
-                <span>measured release windows</span>
-              </div>
-            </div>
+            <p class="home-simple-meta">Made on demand / measured release windows</p>
           </article>
 
-          <article class="card reveal">
+          <article class="home-simple-card">
             <p class="eyebrow">03 / Distribution handled</p>
             <h3>We carry the production and delivery mechanics so designers can stay in creation.</h3>
             <p>
               Launch pages, campaign support, studio content, fulfillment, and customer
               communication are all part of the platform.
             </p>
-            <div class="inline-stat">
-              <div>
-                <strong>End-to-end support</strong>
-                <span>from concept to customer</span>
-              </div>
-            </div>
+            <p class="home-simple-meta">End-to-end support / from concept to customer</p>
           </article>
         </div>
       </section>
 
       <!-- Product-facing preview content is intentionally hidden until real inventory is ready.
            Restore instructions live in Agents.md. -->
-      <section class="section story-grid" data-product-preview="featured-release" hidden>
-        <article class="editorial-card editorial-card--stacked reveal">
-          <div class="editorial-card__media panel-media">
-            <span class="panel-media__cover" aria-hidden="true"></span>
-            <img
-              src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80"
-              alt="Designer wearing sculptural black garments in an editorial setting"
-            />
-          </div>
-          <!-- Featured release copy/actions intentionally removed until real products are ready. -->
-        </article>
-
-        <article class="quote-card reveal">
-          <span>Designer statement</span>
-          <p>
-            “The best work is often ready long before the system around it is. DROP 01 closes
-            that distance.”
-          </p>
-        </article>
+      <section class="section home-product-placeholder" data-product-preview="featured-release" hidden>
+        <!-- Featured release intentionally hidden until real products are ready. -->
       </section>
 
-      <section class="section" data-product-preview="shop-preview" hidden>
-        <div class="section-head reveal">
-          <p class="eyebrow">Preview the shop</p>
-          <h2 class="title-lg">Current drops move quickly and stay intimate.</h2>
-          <p class="body-copy">
-            Each release opens for a short window, with pricing, production, and remaining units
-            visible up front.
-          </p>
-        </div>
+      <section class="section home-product-placeholder" data-product-preview="shop-preview" hidden>
+        <div class="drops-grid" data-shopify-grid-disabled="home" data-shopify-limit="3"></div>
+      </section>
 
-        <div class="drops-grid" data-shopify-grid-disabled="home" data-shopify-limit="3">
-          <article class="drop-card reveal">
-            <div class="drop-card__media panel-media">
-              <span class="panel-media__cover" aria-hidden="true"></span>
-              <img
-                src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80"
-                alt="Neutral oversized coat on a model"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate angle of an oversized coat"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Isla Ren</span>
-                <strong>$420</strong>
-              </div>
-              <h3>Contour Coat</h3>
-              <p>Architectural wool twill with hidden seam pockets and detachable waist tie.</p>
-              <div class="progress-block" data-progress="74">
-                <div class="progress-copy">
-                  <strong>74% claimed</strong>
-                  <span>18 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-            </div>
+      <section class="section home-section">
+        <div class="home-split-grid">
+          <article class="home-simple-card">
+            <p class="eyebrow">About</p>
+            <h3>A designer-driven platform built to release independent work in the world.</h3>
+            <p>
+              DROP 01 exists for ideas that are already strong, already formed, and still stalled
+              by production barriers. We organize limited drops around those ideas with preorders,
+              small-batch fulfillment, and a release model that respects the designer's voice.
+            </p>
+            <a class="home-text-link" href="about.html">Read more about the platform</a>
           </article>
 
-          <article class="drop-card reveal">
-            <div class="drop-card__media panel-media">
-              <span class="panel-media__cover" aria-hidden="true"></span>
-              <img
-                src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=80"
-                alt="Model in sculptural dress"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate angle of sculptural dress"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Studio Lune</span>
-                <strong>$310</strong>
-              </div>
-              <h3>Halo Dress</h3>
-              <p>Bias-cut silk with an asymmetrical hemline and hidden inner corset structure.</p>
-              <div class="progress-block" data-progress="58">
-                <div class="progress-copy">
-                  <strong>58% claimed</strong>
-                  <span>31 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="drop-card reveal">
-            <div class="drop-card__media panel-media">
-              <span class="panel-media__cover" aria-hidden="true"></span>
-              <img
-                src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1000&q=80"
-                alt="Layered knitwear look in a studio"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=80"
-                alt="Alternate knitwear editorial image"
-              />
-            </div>
-            <div class="drop-card__body">
-              <div class="drop-card__meta">
-                <span>Vale Common</span>
-                <strong>$215</strong>
-              </div>
-              <h3>Framework Knit</h3>
-              <p>Open-structure alpaca knit with engineered drape and brushed tactile finish.</p>
-              <div class="progress-block" data-progress="81">
-                <div class="progress-copy">
-                  <strong>81% claimed</strong>
-                  <span>9 units left</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill"></div></div>
-              </div>
-            </div>
+          <article class="home-simple-card">
+            <p class="eyebrow">Shop</p>
+            <h3>Limited preorder windows remain the core model.</h3>
+            <p>
+              Each release opens for a short window, with pricing, production, and availability
+              communicated up front. The shop stays intentionally selective until live inventory is
+              ready.
+            </p>
+            <a class="home-text-link" href="shop.html">Visit the shop page</a>
           </article>
         </div>
       </section>
 
-      <section class="section featured-banner reveal">
-        <div>
-          <p class="eyebrow">For designers</p>
-          <h2 class="title-md">Keep your concept uncompromised. We will build the release around it.</h2>
-          <p class="body-copy">
-            From sampling and pricing to launch pages and fulfillment, DROP 01 helps independent
-            designers move like a brand without carrying the whole infrastructure alone.
-          </p>
-          <div class="button-row">
-            <a class="button" href="designers.html" data-hover-lift>Apply As A Designer</a>
-            <a class="button-ghost" href="contact.html" data-hover-lift>Book A Conversation</a>
-          </div>
-        </div>
-
-        <div class="featured-banner__metrics">
-          <article class="card">
-            <p class="eyebrow">Production model</p>
-            <h3>Capsule drops, calibrated to demand</h3>
-            <p>Every release is staged to preserve exclusivity, limit waste, and protect cash flow.</p>
+      <section class="section home-section home-section--compact">
+        <div class="home-split-grid">
+          <article class="home-simple-card">
+            <p class="eyebrow">For designers</p>
+            <h2 class="title-sm">Keep your concept uncompromised.</h2>
+            <p>
+              DROP 01 supports independent designers with production planning, launch strategy,
+              pricing, customer fulfillment, and distribution support so the work can stay focused
+              and demand-led.
+            </p>
+            <ul class="home-simple-list">
+              <li>Sampling, costing, and small-batch planning</li>
+              <li>Storytelling, campaign framing, and product presentation</li>
+              <li>Preorder handling, fulfillment communication, and delivery coordination</li>
+            </ul>
+            <div class="button-row">
+              <a class="button" href="designers.html">Apply As A Designer</a>
+            </div>
           </article>
-          <article class="card">
-            <p class="eyebrow">Support</p>
-            <h3>Strategy, storytelling, fulfillment</h3>
-            <p>You stay focused on the garment. We organize the release around the garment.</p>
+
+          <article class="home-simple-card">
+            <p class="eyebrow">Contact</p>
+            <h2 class="title-sm">Conversations for collaborations and designer submissions.</h2>
+            <p>
+              Reach out for editorial collaborations, customer support, or designer inquiries. If
+              you are preparing a release, include what stage the work is in and what kind of
+              support you need most.
+            </p>
+            <div class="home-link-stack">
+              <a class="home-text-link" href="contact.html">Open the contact page</a>
+              <a class="home-text-link" href="mailto:hello@drop01.com">hello@drop01.com</a>
+              <a class="home-text-link" href="https://www.instagram.com/drop.o1?igsh=MTRwYzR4bG5hZXdvbw==">
+                Instagram / @drop.o1
+              </a>
+            </div>
           </article>
         </div>
       </section>
@@ -390,7 +299,7 @@
       <div class="subscribe-modal__scrim"></div>
       <div class="subscribe-modal__panel">
         <button class="subscribe-modal__close" type="button" data-close-modal aria-label="Close subscription panel">
-          ×
+          &times;
         </button>
         <p class="eyebrow">Join us today</p>
         <h2 class="title-sm">Subscribe to get updates about new drops and designer releases.</h2>
@@ -406,7 +315,7 @@
             <label for="modal-email">Email address</label>
             <input id="modal-email" name="email" type="email" placeholder="your@email.com" required />
           </div>
-          <button class="button" type="submit" data-hover-lift>Let’s go</button>
+          <button class="button" type="submit">Let's go</button>
         </form>
       </div>
     </div>
