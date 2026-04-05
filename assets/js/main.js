@@ -88,120 +88,13 @@ function setupHeaderMotion() {
     return;
   }
 
-  if (prefersReducedMotion) {
-    gsap.set(header, {
-      yPercent: 0,
-      autoAlpha: 1,
-      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-    });
-    return;
-  }
-
-  let lastScrollY = window.scrollY;
-  let accumulatedDelta = 0;
-  let ticking = false;
-  let isHidden = false;
-
-  const getThresholds = () =>
-    isCompactViewport()
-      ? {
-          revealThreshold: 12,
-          hideThreshold: 36,
-          hideDistanceThreshold: 18,
-        }
-      : {
-          revealThreshold: 18,
-          hideThreshold: 72,
-          hideDistanceThreshold: 30,
-        };
-
-  const setHeaderVisible = () => {
-    if (!isHidden) {
-      gsap.to(header, {
-        yPercent: 0,
-        autoAlpha: 1,
-        backgroundColor: "#ffffff",
-        boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-        duration: 0.7,
-        ease: "power3.out",
-        overwrite: "auto",
-      });
-      return;
-    }
-
-    isHidden = false;
-    header.classList.remove("is-hidden");
-    gsap.to(header, {
-      yPercent: 0,
-      autoAlpha: 1,
-      backgroundColor: "#ffffff",
-      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-      duration: 0.7,
-      ease: "power3.out",
-      overwrite: "auto",
-    });
-  };
-
-  const setHeaderHidden = () => {
-    if (isHidden) {
-      return;
-    }
-
-    isHidden = true;
-    header.classList.add("is-hidden");
-    gsap.to(header, {
-      yPercent: -115,
-      autoAlpha: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.96)",
-      boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
-      duration: 0.58,
-      ease: "power2.inOut",
-      overwrite: "auto",
-    });
-  };
-
+  header.classList.remove("is-hidden");
   gsap.set(header, {
     yPercent: 0,
     autoAlpha: 1,
+    backgroundColor: "#ffffff",
     boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
   });
-
-  const updateHeaderState = () => {
-    const currentScrollY = window.scrollY;
-    const delta = currentScrollY - lastScrollY;
-    const { revealThreshold, hideThreshold, hideDistanceThreshold } = getThresholds();
-
-    if (delta > 0) {
-      accumulatedDelta = Math.max(0, accumulatedDelta) + delta;
-    } else if (delta < 0) {
-      accumulatedDelta = Math.min(0, accumulatedDelta) + delta;
-    }
-
-    if (currentScrollY <= 24) {
-      accumulatedDelta = 0;
-      setHeaderVisible();
-    } else if (accumulatedDelta > hideDistanceThreshold && currentScrollY > hideThreshold) {
-      accumulatedDelta = 0;
-      setHeaderHidden();
-    } else if (accumulatedDelta < -revealThreshold) {
-      accumulatedDelta = 0;
-      setHeaderVisible();
-    }
-
-    lastScrollY = currentScrollY;
-    ticking = false;
-  };
-
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateHeaderState);
-        ticking = true;
-      }
-    },
-    { passive: true }
-  );
 }
 
 function setupRevealAnimations() {
