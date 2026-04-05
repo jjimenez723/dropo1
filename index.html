@@ -60,34 +60,31 @@
               </nav>
             </div>
 
-            <div class="hero__headline">
-              <p class="eyebrow">Get your first drop</p>
-              <div class="hero__headline-body">
-                <h1 class="hero__kicker">Don't Let Your Best Work Die in a Folder.</h1>
-                <div class="hero__headline-copy">
-                  <p class="lede">
-                    This board behaves like a live studio wall: drag notes, fling them away, and
-                    pin down a thought of your own.
-                  </p>
-                  <p class="lede">
-                    DROP 01 turns those fragments into
-                    <strong>limited, preorder-led fashion drops</strong> built around real demand.
-                  </p>
-                </div>
-              </div>
-              <div class="button-row">
-                <a class="button" href="shop.html" data-hover-lift>Shop The Drops</a>
-                <button class="button-ghost" type="button" data-open-modal data-hover-lift>
-                  Join The List
-                </button>
-              </div>
-            </div>
+     
 
             <div class="hero__logo-slot" aria-hidden="true"></div>
 
+            <form class="hero-note-form" data-note-form autocomplete="off">
+              <label for="hero-note-input">Add your own note to the wall</label>
+              <div class="hero-note-form__row">
+                <input
+                  id="hero-note-input"
+                  name="note"
+                  type="text"
+                  maxlength="64"
+                  placeholder="Write a drop idea, phrase, or reminder"
+                  data-note-input
+                  required
+                />
+                <button class="button" type="submit" data-hover-lift>Pin It</button>
+              </div>
+              <p class="hero-note-form__status form-note" data-note-status aria-live="polite">
+                Type a note and pin it to the board.
+              </p>
+            </form>
+
             <aside class="hero__subscribe-card" data-delayed-subscribe hidden>
               <span>Join us today</span>
-              <strong>Subscribe for exclusive drops, atelier notes, and first access.</strong>
               <form
                 class="mini-form"
                 data-webhook-form="newsletter-subscribe"
@@ -107,25 +104,6 @@
               </form>
             </aside>
           </div>
-
-          <form class="hero-note-form" data-note-form autocomplete="off">
-            <label for="hero-note-input">Add your own note to the wall</label>
-            <div class="hero-note-form__row">
-              <input
-                id="hero-note-input"
-                name="note"
-                type="text"
-                maxlength="64"
-                placeholder="Write a drop idea, phrase, or reminder"
-                data-note-input
-                required
-              />
-              <button class="button" type="submit" data-hover-lift>Pin It</button>
-            </div>
-            <p class="hero-note-form__status form-note" data-note-status aria-live="polite">
-              Type a note and pin it to the board.
-            </p>
-          </form>
         </div>
       </section>
 
@@ -133,11 +111,7 @@
         <div class="home-section__intro">
           <p class="eyebrow">Join us today</p>
           <h2 class="title-md">Subscribe for exclusive drops, atelier updates, and early access.</h2>
-          <p class="body-copy">
-            Receive first notice when a release opens. Most pieces on the site move through
-            preorder windows first, along with studio notes from the designers shaping the
-            platform.
-          </p>
+          
         </div>
         <form
           class="subscribe-form home-subscribe-form"
@@ -171,30 +145,7 @@
 
    
 
-    <div class="subscribe-modal" data-subscribe-modal aria-hidden="true">
-      <div class="subscribe-modal__scrim"></div>
-      <div class="subscribe-modal__panel">
-        <button class="subscribe-modal__close" type="button" data-close-modal aria-label="Close subscription panel">
-          &times;
-        </button>
-        <p class="eyebrow">Join us today</p>
-        <h2 class="title-sm">Subscribe to get updates about new drops and designer releases.</h2>
-        <p class="body-copy">
-          Early access, studio dispatches, and quiet previews before the public launch window.
-        </p>
-        <form
-          class="mini-form"
-          data-webhook-form="newsletter-subscribe"
-          data-success-message="You are on the list for the next limited release."
-        >
-          <div class="field">
-            <label for="modal-email">Email address</label>
-            <input id="modal-email" name="email" type="email" placeholder="your@email.com" required />
-          </div>
-          <button class="button" type="submit">Let's go</button>
-        </form>
-      </div>
-    </div>
+   
 
     <script src="assets/js/site-config.js?v=20260328-3"></script>
     <script src="assets/js/site-config.public.js?v=20260329-2"></script>

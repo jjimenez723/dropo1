@@ -2394,7 +2394,7 @@ async function setupNoticeBoardHero() {
     }
 
     gsap.set(noteForm, {
-      xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
+      xPercent: 0,
     });
   }
 
@@ -2421,19 +2421,8 @@ async function setupNoticeBoardHero() {
       syncHeroNoteFormTransform();
       gsap.fromTo(
         noteForm,
-        {
-          autoAlpha: 0,
-          y: 20,
-          xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
-        },
-        {
-          autoAlpha: 1,
-          y: 0,
-          xPercent: mediaQueries.compactViewport.matches ? 0 : -50,
-          duration: 0.8,
-          delay: 0.08,
-          ease: "power3.out",
-        }
+        { autoAlpha: 0, y: 20 },
+        { autoAlpha: 1, y: 0, duration: 0.8, delay: 0.08, ease: "power3.out" }
       );
     }
   }
