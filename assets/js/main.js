@@ -1787,14 +1787,20 @@ async function setupNoticeBoardHero() {
     tablet: {
       lineY: 0.16,
       maxHeight: 0.18,
-      widthFill: 0.96,
-      gap: 0.014,
+      widthFill: 0.94,
+      gap: 0.012,
+      slotRows: 2,
+      slotHeightFill: 0.92,
+      slotRowGap: 0.08,
     },
     mobile: {
       lineY: 0.14,
       maxHeight: 0.11,
-      widthFill: 0.98,
-      gap: 0.01,
+      widthFill: 0.95,
+      gap: 0.012,
+      slotRows: 2,
+      slotHeightFill: 0.94,
+      slotRowGap: 0.08,
     },
   };
 
@@ -2214,6 +2220,45 @@ async function setupNoticeBoardHero() {
     };
   }
 
+  function getHeroNoteRows(activeHeroNotes, stage, layoutPreset) {
+    if (!stage.isSlotStage || layoutPreset.slotRows !== 2) {
+      return [activeHeroNotes];
+    }
+
+    const noteMap = new Map(activeHeroNotes);
+    const usedKeys = new Set();
+    const rowKeys = [
+      ["d", "r", "o", "p"],
+      ["orange", "zero", "one", "pink"],
+    ];
+    const rows = rowKeys
+      .map((keys) =>
+        keys
+          .map((key) => {
+            const note = noteMap.get(key);
+            if (!note) {
+              return null;
+            }
+
+            usedKeys.add(key);
+            return [key, note];
+          })
+          .filter(Boolean)
+      )
+      .filter((row) => row.length);
+    const overflow = activeHeroNotes.filter(([key]) => !usedKeys.has(key));
+
+    if (overflow.length) {
+      if (rows.length) {
+        rows[rows.length - 1].push(...overflow);
+      } else {
+        rows.push(overflow);
+      }
+    }
+
+    return rows.length ? rows : [activeHeroNotes];
+  }
+
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
@@ -2228,50 +2273,69 @@ async function setupNoticeBoardHero() {
       return;
     }
 
-    const totalAspect = activeHeroNotes.reduce((sum, [, note]) => {
-      const motion = note.userData.motion;
-      return sum + motion.width / Math.max(motion.height, 0.001);
-    }, 0);
+    const noteRows = getHeroNoteRows(activeHeroNotes, stage, layoutPreset);
     const gap = stage.width * layoutPreset.gap;
-    const stageHeightLimit = stage.isSlotStage
-      ? stage.height * 0.82
-      : stage.height * layoutPreset.maxHeight;
-    const rowHeight = Math.min(
-      stageHeightLimit,
-      (stage.width * layoutPreset.widthFill - gap * (activeHeroNotes.length - 1)) / Math.max(totalAspect, 1)
-    );
-    const totalWidth = rowHeight * totalAspect + gap * (activeHeroNotes.length - 1);
-    let cursor = stage.left + (stage.width - totalWidth) / 2;
-    const lineY = stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
+    const stageHeightLimit = stage.height * (stage.isSlotStage ? layoutPreset.slotHeightFill || 0.82 : layoutPreset.maxHeight);
+    const rowGap = noteRows.length > 1 ? stage.height * (layoutPreset.slotRowGap || 0.08) : 0;
+    const rowHeightByWidth = noteRows.reduce((smallest, row) => {
+      const rowAspect = row.reduce((sum, [, note]) => {
+        const motion = note.userData.motion;
+        return sum + motion.width / Math.max(motion.height, 0.001);
+      }, 0);
+      const rowWidth = stage.width * layoutPreset.widthFill - gap * (row.length - 1);
 
-    activeHeroNotes.forEach(([key, note], index) => {
+      return Math.min(smallest, rowWidth / Math.max(rowAspect, 1));
+    }, Number.POSITIVE_INFINITY);
+    const rowHeightByHeight = (stageHeightLimit - rowGap * (noteRows.length - 1)) / Math.max(noteRows.length, 1);
+    const rowHeight = Math.max(0.1, Math.min(rowHeightByWidth, rowHeightByHeight));
+    const blockHeight = rowHeight * noteRows.length + rowGap * (noteRows.length - 1);
+    const blockCenterY =
+      stage.isSlotStage && noteRows.length > 1
+        ? (stage.top + stage.bottom) / 2
+        : stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
+    let noteIndex = 0;
 
-      const motion = note.userData.motion;
-      const aspect = motion.width / Math.max(motion.height, 0.001);
-      const noteWidth = rowHeight * aspect;
-      const centerX = cursor + noteWidth / 2;
-      const z = logoFrontStartZ + index * 0.18;
-      const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
+    noteRows.forEach((row, rowIndex) => {
+      const rowAspect = row.reduce((sum, [, note]) => {
+        const motion = note.userData.motion;
+        return sum + motion.width / Math.max(motion.height, 0.001);
+      }, 0);
+      const totalWidth = rowHeight * rowAspect + gap * (row.length - 1);
+      let cursor = stage.left + (stage.width - totalWidth) / 2;
+      const lineY =
+        noteRows.length > 1
+          ? blockCenterY + blockHeight / 2 - rowHeight / 2 - rowIndex * (rowHeight + rowGap)
+          : blockCenterY;
 
-      motion.restX = centerX;
-      motion.restY = lineY;
-      motion.restZ = z;
-      motion.homeX = centerX;
-      motion.homeY = lineY;
-      motion.homeZ = z;
-      motion.restRotationZ = heroNoteRotations[key] ?? 0;
-      motion.homeRotationZ = motion.restRotationZ;
+      row.forEach(([key, note]) => {
+        const motion = note.userData.motion;
+        const aspect = motion.width / Math.max(motion.height, 0.001);
+        const noteWidth = rowHeight * aspect;
+        const centerX = cursor + noteWidth / 2;
+        const z = logoFrontStartZ + noteIndex * 0.18;
+        const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
-      note.scale.set(scale, scale, 1);
-      note.renderOrder = Math.round(z * 10);
+        motion.restX = centerX;
+        motion.restY = lineY;
+        motion.restZ = z;
+        motion.homeX = centerX;
+        motion.homeY = lineY;
+        motion.homeZ = z;
+        motion.restRotationZ = heroNoteRotations[key] ?? 0;
+        motion.homeRotationZ = motion.restRotationZ;
 
-      if (!motion.isDragging && !motion.isThrowing) {
-        note.position.set(centerX, lineY, z);
-        note.rotation.z = motion.restRotationZ;
-      }
+        note.scale.set(scale, scale, 1);
+        note.renderOrder = Math.round(z * 10);
 
-      maxLogoRestZ = Math.max(maxLogoRestZ, z);
-      cursor += noteWidth + gap;
+        if (!motion.isDragging && !motion.isThrowing) {
+          note.position.set(centerX, lineY, z);
+          note.rotation.z = motion.restRotationZ;
+        }
+
+        maxLogoRestZ = Math.max(maxLogoRestZ, z);
+        cursor += noteWidth + gap;
+        noteIndex += 1;
+      });
     });
 
     boardFrontZ = Math.max(boardFrontZ, maxBoardRestZ);

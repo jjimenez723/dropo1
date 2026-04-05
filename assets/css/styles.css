@@ -1973,7 +1973,7 @@ body.is-dragging-notice-board {
   .hero__logo-slot {
     display: block;
     width: 100%;
-    min-height: clamp(132px, 30vw, 188px);
+    min-height: clamp(176px, 42vw, 272px);
     pointer-events: none;
   }
 
@@ -2111,7 +2111,7 @@ body.is-dragging-notice-board {
   }
 
   .hero__logo-slot {
-    min-height: clamp(112px, 30vw, 152px);
+    min-height: clamp(188px, 52vw, 248px);
   }
 
   .hero__headline,
