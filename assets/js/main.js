@@ -1877,13 +1877,13 @@ async function setupNoticeBoardHero() {
   };
   const heroLayoutPresets = {
     desktop: {
-      lineY: 0.9,
+      lineY: 0.5,
       maxHeight: 0.28,
       widthFill: 0.9,
       gap: 0.022,
     },
     laptop: {
-      lineY: 0.9,
+      lineY: 0.5,
       maxHeight: 0.24,
       widthFill: 0.98,
       gap: 0.018,
