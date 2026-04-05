@@ -258,19 +258,8 @@ body.images-hidden .editorial-card--stacked {
   overflow: hidden;
   border-radius: 40px;
   padding: clamp(22px, 3vw, 34px);
-  background:
-    radial-gradient(
-      circle at var(--spot-x, 50%) var(--spot-y, 32%),
-      rgb(var(--accent-rgb) / 0.24),
-      transparent 24%
-    ),
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.94),
-      rgba(245, 248, 251, 0.96)
-    );
-  border: 1px solid rgb(var(--accent-rgb) / 0.24);
-  box-shadow: 0 32px 84px rgba(0, 0, 0, 0.11);
+  background: transparent;
+  border: none;
   perspective: 1400px;
   --spot-x: 50%;
   --spot-y: 32%;
@@ -281,14 +270,8 @@ body.images-hidden .editorial-card--stacked {
 .shop-soon__glow {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      circle at var(--glow-x, 50%) var(--glow-y, 32%),
-      rgb(var(--accent-rgb) / 0.2),
-      transparent 28%
-    ),
-    radial-gradient(circle at 82% 18%, rgba(0, 0, 0, 0.08), transparent 18%);
-  opacity: 0.9;
+  background: none;
+  opacity: 0;
   pointer-events: none;
   mix-blend-mode: multiply;
 }
