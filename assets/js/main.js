@@ -462,13 +462,13 @@ function getSubmissionErrorMessage(webhookKey, isWorkflowError, draftWasSaved) {
   if (webhookKey === "designer-intake") {
     if (isWorkflowError) {
       return draftWasSaved
-        ? "The designer intake service is currently having a server issue. Your application draft was saved on this device so you can retry shortly."
-        : "The designer intake service is currently having a server issue. Please try again shortly.";
+        ? "The designer application service is currently having a server issue. Your application draft was saved on this device so you can retry shortly."
+        : "The designer application service is currently having a server issue. Please try again shortly.";
     }
 
     return draftWasSaved
-      ? "The intake did not go through. Your application draft was saved on this device so you can retry in a moment."
-      : "The intake did not go through. Please try again in a moment.";
+      ? "The application did not go through. Your draft was saved on this device so you can retry in a moment."
+      : "The application did not go through. Please try again in a moment.";
   }
 
   return draftWasSaved

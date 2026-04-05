@@ -369,6 +369,20 @@ body.images-hidden .editorial-card--stacked {
   max-width: 980px;
 }
 
+.designers-intro {
+  padding-top: 80px;
+}
+
+.designers-intro .section-head {
+  margin-inline: auto;
+  justify-items: center;
+  text-align: center;
+}
+
+.designers-intro .lede {
+  width: min(100%, 760px);
+}
+
 .title-xl,
 .title-lg,
 .title-md,
@@ -1015,6 +1029,10 @@ body.is-dragging-notice-board {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.contact-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .value-grid,
 .designer-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1042,6 +1060,13 @@ body.is-dragging-notice-board {
 .testimonial,
 .contact-card {
   padding: 28px;
+}
+
+.contact-card--form-shell {
+  width: min(100%, 920px);
+  margin-inline: auto;
+  justify-self: center;
+  margin-top: 30px;
 }
 
 .editorial-card {
