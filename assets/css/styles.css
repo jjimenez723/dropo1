@@ -2217,6 +2217,12 @@ body.is-dragging-notice-board {
   max-width: 52rem;
 }
 
+.home-section__lead {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
 .home-subscribe-form {
   max-width: 420px;
   padding: 22px;
@@ -2332,6 +2338,30 @@ body.is-dragging-notice-board {
   box-shadow: none;
 }
 
+.page-about .page-main {
+  padding-top: clamp(28px, 5vw, 72px);
+}
+
+.page-about .section-head--wide {
+  max-width: min(1240px, calc(100vw - 96px));
+  gap: clamp(20px, 2.4vw, 32px);
+}
+
+.page-about .title-lg {
+  max-width: 14ch;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.page-about .lede {
+  max-width: 54rem;
+  font-size: clamp(1.1rem, 1.4vw, 1.55rem);
+  line-height: 1.52;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 900px) {
   .home-section--subscribe,
   .home-simple-grid,
@@ -2350,6 +2380,24 @@ body.is-dragging-notice-board {
     padding-bottom: 48px;
   }
 
+  .page-about .page-main {
+    padding-top: 20px;
+  }
+
+  .page-about .section-head--wide {
+    max-width: min(100%, calc(100vw - 32px));
+  }
+
+  .page-about .title-lg {
+    max-width: none;
+    line-height: 1.04;
+  }
+
+  .page-about .lede {
+    font-size: 1rem;
+    letter-spacing: 0.025em;
+  }
+
   .home-section {
     gap: 16px;
     padding: 16px 0;
@@ -2364,4 +2412,9 @@ body.is-dragging-notice-board {
     gap: 10px;
     padding-top: 14px;
   }
+}
+
+#lede{
+  margin-top: 1vw;
+  font-size: 1.7vw;
 }
