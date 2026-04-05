@@ -88,120 +88,13 @@ function setupHeaderMotion() {
     return;
   }
 
-  if (prefersReducedMotion) {
-    gsap.set(header, {
-      yPercent: 0,
-      autoAlpha: 1,
-      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-    });
-    return;
-  }
-
-  let lastScrollY = window.scrollY;
-  let accumulatedDelta = 0;
-  let ticking = false;
-  let isHidden = false;
-
-  const getThresholds = () =>
-    isCompactViewport()
-      ? {
-          revealThreshold: 12,
-          hideThreshold: 36,
-          hideDistanceThreshold: 18,
-        }
-      : {
-          revealThreshold: 18,
-          hideThreshold: 72,
-          hideDistanceThreshold: 30,
-        };
-
-  const setHeaderVisible = () => {
-    if (!isHidden) {
-      gsap.to(header, {
-        yPercent: 0,
-        autoAlpha: 1,
-        backgroundColor: "#ffffff",
-        boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-        duration: 0.7,
-        ease: "power3.out",
-        overwrite: "auto",
-      });
-      return;
-    }
-
-    isHidden = false;
-    header.classList.remove("is-hidden");
-    gsap.to(header, {
-      yPercent: 0,
-      autoAlpha: 1,
-      backgroundColor: "#ffffff",
-      boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
-      duration: 0.7,
-      ease: "power3.out",
-      overwrite: "auto",
-    });
-  };
-
-  const setHeaderHidden = () => {
-    if (isHidden) {
-      return;
-    }
-
-    isHidden = true;
-    header.classList.add("is-hidden");
-    gsap.to(header, {
-      yPercent: -115,
-      autoAlpha: 0,
-      backgroundColor: "rgba(255, 255, 255, 0.96)",
-      boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
-      duration: 0.58,
-      ease: "power2.inOut",
-      overwrite: "auto",
-    });
-  };
-
+  header.classList.remove("is-hidden");
   gsap.set(header, {
     yPercent: 0,
     autoAlpha: 1,
+    backgroundColor: "#ffffff",
     boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
   });
-
-  const updateHeaderState = () => {
-    const currentScrollY = window.scrollY;
-    const delta = currentScrollY - lastScrollY;
-    const { revealThreshold, hideThreshold, hideDistanceThreshold } = getThresholds();
-
-    if (delta > 0) {
-      accumulatedDelta = Math.max(0, accumulatedDelta) + delta;
-    } else if (delta < 0) {
-      accumulatedDelta = Math.min(0, accumulatedDelta) + delta;
-    }
-
-    if (currentScrollY <= 24) {
-      accumulatedDelta = 0;
-      setHeaderVisible();
-    } else if (accumulatedDelta > hideDistanceThreshold && currentScrollY > hideThreshold) {
-      accumulatedDelta = 0;
-      setHeaderHidden();
-    } else if (accumulatedDelta < -revealThreshold) {
-      accumulatedDelta = 0;
-      setHeaderVisible();
-    }
-
-    lastScrollY = currentScrollY;
-    ticking = false;
-  };
-
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateHeaderState);
-        ticking = true;
-      }
-    },
-    { passive: true }
-  );
 }
 
 function setupRevealAnimations() {
@@ -1745,37 +1638,40 @@ async function setupNoticeBoardHero() {
   const noteStatus = hero.querySelector("[data-note-status]");
   let heroQuality = getHeroQualityProfile();
 
+  function getNavigatorCapability(name) {
+    const value = Number(window.navigator?.[name]);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function isLowEndHeroDevice() {
+    const deviceMemory = getNavigatorCapability("deviceMemory");
+    const hardwareConcurrency = getNavigatorCapability("hardwareConcurrency");
+
+    return (
+      (deviceMemory !== null && deviceMemory <= 4) ||
+      (hardwareConcurrency !== null && hardwareConcurrency <= 4)
+    );
+  }
+
   function getHeroQualityProfile() {
     const width = window.innerWidth;
-    const coarsePointer = hasCoarsePointer();
-
-    if (width <= 560 || coarsePointer) {
-      return {
-        antialias: false,
-        pixelRatioCap: 1,
-        shadows: false,
-        shadowMapSize: 0,
-        posterCount: 40,
-        posterHeight: 1.5,
-        motionScale: 0.58,
-        frameInterval: 1000 / 30,
-        textureSize: { width: 512, height: 384 },
-        maxAnisotropy: 2,
-      };
-    }
 
     if (width <= 800) {
+      const lowEndProfile = isLowEndHeroDevice();
+
       return {
-        antialias: false,
-        pixelRatioCap: 1.25,
+        antialias: !lowEndProfile,
+        pixelRatioCap: lowEndProfile ? 1.25 : 2,
         shadows: false,
         shadowMapSize: 0,
         posterCount: 40,
         posterHeight: 1.5,
-        motionScale: 0.74,
-        frameInterval: 1000 / 40,
-        textureSize: { width: 768, height: 576 },
-        maxAnisotropy: 4,
+        motionScale: width <= 560 ? 0.58 : 0.74,
+        frameInterval: lowEndProfile ? 1000 / 30 : 1000 / 40,
+        textureSize: lowEndProfile
+          ? { width: 768, height: 576 }
+          : { width: 1024, height: 768 },
+        maxAnisotropy: lowEndProfile ? 4 : 8,
       };
     }
 
@@ -1891,14 +1787,20 @@ async function setupNoticeBoardHero() {
     tablet: {
       lineY: 0.16,
       maxHeight: 0.18,
-      widthFill: 0.96,
-      gap: 0.014,
+      widthFill: 0.94,
+      gap: 0.012,
+      slotRows: 2,
+      slotHeightFill: 0.92,
+      slotRowGap: 0.08,
     },
     mobile: {
       lineY: 0.14,
       maxHeight: 0.11,
-      widthFill: 0.98,
-      gap: 0.01,
+      widthFill: 0.95,
+      gap: 0.012,
+      slotRows: 2,
+      slotHeightFill: 0.94,
+      slotRowGap: 0.08,
     },
   };
 
@@ -1975,13 +1877,7 @@ async function setupNoticeBoardHero() {
       textureLoader.load(
         url,
         (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(
-            renderer.capabilities.getMaxAnisotropy(),
-            heroQuality.maxAnisotropy
-          );
-          texture.needsUpdate = true;
-          resolve(texture);
+          resolve(applyHeroTextureQuality(texture));
         },
         undefined,
         reject
@@ -2005,6 +1901,76 @@ async function setupNoticeBoardHero() {
     const width = image?.naturalWidth || image?.videoWidth || image?.width || 1;
     const height = image?.naturalHeight || image?.videoHeight || image?.height || 1;
     return width / height;
+  }
+
+  function getTextureDimensions(texture) {
+    const image = texture?.image;
+
+    return {
+      width: image?.naturalWidth || image?.videoWidth || image?.width || 0,
+      height: image?.naturalHeight || image?.videoHeight || image?.height || 0,
+    };
+  }
+
+  function canUseTextureMipmaps(texture) {
+    const { width, height } = getTextureDimensions(texture);
+    if (!width || !height) {
+      return false;
+    }
+
+    return (
+      renderer.capabilities.isWebGL2 ||
+      (THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height))
+    );
+  }
+
+  function applyHeroTextureQuality(texture) {
+    if (!texture) {
+      return texture;
+    }
+
+    const useMipmaps = canUseTextureMipmaps(texture);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = useMipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+    texture.generateMipmaps = useMipmaps;
+    texture.anisotropy = Math.min(
+      renderer.capabilities.getMaxAnisotropy(),
+      heroQuality.maxAnisotropy
+    );
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  function refreshHeroTextureQuality() {
+    const activeTextures = new Set();
+
+    noteMeshes.forEach((note) => {
+      if (note.material?.map) {
+        activeTextures.add(note.material.map);
+      }
+    });
+
+    activeTextures.forEach((texture) => {
+      applyHeroTextureQuality(texture);
+    });
+  }
+
+  function refreshUserNoteTexture(note) {
+    const motion = note.userData.motion;
+    if (!motion?.userNote || !motion.noteText || !motion.ownsTexture) {
+      return;
+    }
+
+    const currentTexture = note.material?.map;
+    const { width, height } = getTextureDimensions(currentTexture);
+    if (width === heroQuality.textureSize.width && height === heroQuality.textureSize.height) {
+      return;
+    }
+
+    note.material.map = buildCanvasNoteTexture(motion.noteText);
+    note.material.needsUpdate = true;
+    currentTexture?.dispose();
   }
 
   function randomBetween(min, max) {
@@ -2254,6 +2220,45 @@ async function setupNoticeBoardHero() {
     };
   }
 
+  function getHeroNoteRows(activeHeroNotes, stage, layoutPreset) {
+    if (!stage.isSlotStage || layoutPreset.slotRows !== 2) {
+      return [activeHeroNotes];
+    }
+
+    const noteMap = new Map(activeHeroNotes);
+    const usedKeys = new Set();
+    const rowKeys = [
+      ["d", "r", "o", "p"],
+      ["orange", "zero", "one", "pink"],
+    ];
+    const rows = rowKeys
+      .map((keys) =>
+        keys
+          .map((key) => {
+            const note = noteMap.get(key);
+            if (!note) {
+              return null;
+            }
+
+            usedKeys.add(key);
+            return [key, note];
+          })
+          .filter(Boolean)
+      )
+      .filter((row) => row.length);
+    const overflow = activeHeroNotes.filter(([key]) => !usedKeys.has(key));
+
+    if (overflow.length) {
+      if (rows.length) {
+        rows[rows.length - 1].push(...overflow);
+      } else {
+        rows.push(overflow);
+      }
+    }
+
+    return rows.length ? rows : [activeHeroNotes];
+  }
+
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
@@ -2268,50 +2273,69 @@ async function setupNoticeBoardHero() {
       return;
     }
 
-    const totalAspect = activeHeroNotes.reduce((sum, [, note]) => {
-      const motion = note.userData.motion;
-      return sum + motion.width / Math.max(motion.height, 0.001);
-    }, 0);
+    const noteRows = getHeroNoteRows(activeHeroNotes, stage, layoutPreset);
     const gap = stage.width * layoutPreset.gap;
-    const stageHeightLimit = stage.isSlotStage
-      ? stage.height * 0.82
-      : stage.height * layoutPreset.maxHeight;
-    const rowHeight = Math.min(
-      stageHeightLimit,
-      (stage.width * layoutPreset.widthFill - gap * (activeHeroNotes.length - 1)) / Math.max(totalAspect, 1)
-    );
-    const totalWidth = rowHeight * totalAspect + gap * (activeHeroNotes.length - 1);
-    let cursor = stage.left + (stage.width - totalWidth) / 2;
-    const lineY = stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
+    const stageHeightLimit = stage.height * (stage.isSlotStage ? layoutPreset.slotHeightFill || 0.82 : layoutPreset.maxHeight);
+    const rowGap = noteRows.length > 1 ? stage.height * (layoutPreset.slotRowGap || 0.08) : 0;
+    const rowHeightByWidth = noteRows.reduce((smallest, row) => {
+      const rowAspect = row.reduce((sum, [, note]) => {
+        const motion = note.userData.motion;
+        return sum + motion.width / Math.max(motion.height, 0.001);
+      }, 0);
+      const rowWidth = stage.width * layoutPreset.widthFill - gap * (row.length - 1);
 
-    activeHeroNotes.forEach(([key, note], index) => {
+      return Math.min(smallest, rowWidth / Math.max(rowAspect, 1));
+    }, Number.POSITIVE_INFINITY);
+    const rowHeightByHeight = (stageHeightLimit - rowGap * (noteRows.length - 1)) / Math.max(noteRows.length, 1);
+    const rowHeight = Math.max(0.1, Math.min(rowHeightByWidth, rowHeightByHeight));
+    const blockHeight = rowHeight * noteRows.length + rowGap * (noteRows.length - 1);
+    const blockCenterY =
+      stage.isSlotStage && noteRows.length > 1
+        ? (stage.top + stage.bottom) / 2
+        : stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
+    let noteIndex = 0;
 
-      const motion = note.userData.motion;
-      const aspect = motion.width / Math.max(motion.height, 0.001);
-      const noteWidth = rowHeight * aspect;
-      const centerX = cursor + noteWidth / 2;
-      const z = logoFrontStartZ + index * 0.18;
-      const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
+    noteRows.forEach((row, rowIndex) => {
+      const rowAspect = row.reduce((sum, [, note]) => {
+        const motion = note.userData.motion;
+        return sum + motion.width / Math.max(motion.height, 0.001);
+      }, 0);
+      const totalWidth = rowHeight * rowAspect + gap * (row.length - 1);
+      let cursor = stage.left + (stage.width - totalWidth) / 2;
+      const lineY =
+        noteRows.length > 1
+          ? blockCenterY + blockHeight / 2 - rowHeight / 2 - rowIndex * (rowHeight + rowGap)
+          : blockCenterY;
 
-      motion.restX = centerX;
-      motion.restY = lineY;
-      motion.restZ = z;
-      motion.homeX = centerX;
-      motion.homeY = lineY;
-      motion.homeZ = z;
-      motion.restRotationZ = heroNoteRotations[key] ?? 0;
-      motion.homeRotationZ = motion.restRotationZ;
+      row.forEach(([key, note]) => {
+        const motion = note.userData.motion;
+        const aspect = motion.width / Math.max(motion.height, 0.001);
+        const noteWidth = rowHeight * aspect;
+        const centerX = cursor + noteWidth / 2;
+        const z = logoFrontStartZ + noteIndex * 0.18;
+        const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
-      note.scale.set(scale, scale, 1);
-      note.renderOrder = Math.round(z * 10);
+        motion.restX = centerX;
+        motion.restY = lineY;
+        motion.restZ = z;
+        motion.homeX = centerX;
+        motion.homeY = lineY;
+        motion.homeZ = z;
+        motion.restRotationZ = heroNoteRotations[key] ?? 0;
+        motion.homeRotationZ = motion.restRotationZ;
 
-      if (!motion.isDragging && !motion.isThrowing) {
-        note.position.set(centerX, lineY, z);
-        note.rotation.z = motion.restRotationZ;
-      }
+        note.scale.set(scale, scale, 1);
+        note.renderOrder = Math.round(z * 10);
 
-      maxLogoRestZ = Math.max(maxLogoRestZ, z);
-      cursor += noteWidth + gap;
+        if (!motion.isDragging && !motion.isThrowing) {
+          note.position.set(centerX, lineY, z);
+          note.rotation.z = motion.restRotationZ;
+        }
+
+        maxLogoRestZ = Math.max(maxLogoRestZ, z);
+        cursor += noteWidth + gap;
+        noteIndex += 1;
+      });
     });
 
     boardFrontZ = Math.max(boardFrontZ, maxBoardRestZ);
@@ -2745,6 +2769,7 @@ async function setupNoticeBoardHero() {
 
     const motion = note.userData.motion;
     motion.isThrowing = true;
+    motion.noteText = text;
     bringToFront(note);
     motion.restX = targetX;
     motion.restY = targetY;
@@ -2835,9 +2860,7 @@ async function setupNoticeBoardHero() {
     context.fillText("DRAG IT. THROW IT. MAKE IT REAL.", canvasTexture.width / 2, footerY);
 
     const texture = new THREE.CanvasTexture(canvasTexture);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
+    return applyHeroTextureQuality(texture);
   }
 
   function wrapCanvasText(context, text, maxWidth) {
@@ -2875,6 +2898,9 @@ async function setupNoticeBoardHero() {
     renderer.setSize(width, height, false);
     renderer.shadowMap.enabled = heroQuality.shadows;
     keyLight.castShadow = heroQuality.shadows;
+    if (heroQuality.shadows) {
+      keyLight.shadow.mapSize.set(heroQuality.shadowMapSize, heroQuality.shadowMapSize);
+    }
     board.visible = heroQuality.shadows;
     board.receiveShadow = heroQuality.shadows;
 
@@ -2895,6 +2921,7 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       note.castShadow = heroQuality.shadows;
       note.receiveShadow = heroQuality.shadows;
+      refreshUserNoteTexture(note);
       if (!motion.responsive) {
         return;
       }
@@ -2913,6 +2940,7 @@ async function setupNoticeBoardHero() {
       }
     });
 
+    refreshHeroTextureQuality();
     applyHeroNoteLayout();
   }
 
