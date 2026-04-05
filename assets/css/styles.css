@@ -209,17 +209,13 @@ body.images-hidden .editorial-card--stacked {
   bottom: 0;
   width: 100%;
   height: 1px;
-<<<<<<< HEAD
-  background: currentColor;
+  background: #000000;
   transform: scaleX(0);
   transform-origin: left;
 }
 
 .site-nav a[aria-current="page"]::after {
   transform: scaleX(1);
-=======
-  background: #000000;
->>>>>>> 16607681e69e81c12bf758c782bb770f08fbf392
 }
 
 .page-main {
@@ -657,13 +653,13 @@ body.images-hidden .editorial-card--stacked {
   right: 0;
   bottom: 0;
   height: 1px;
-<<<<<<< HEAD
-  background: currentColor;
+  background: #000000;
   transform: scaleX(0);
   transform-origin: center;
-=======
-  background: #000000;
->>>>>>> 16607681e69e81c12bf758c782bb770f08fbf392
+}
+
+.hero__mobile-nav-row a[aria-current="page"]::after {
+  transform: scaleX(1);
 }
 
 .brand--hero-mobile {
