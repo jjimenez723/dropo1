@@ -1638,37 +1638,40 @@ async function setupNoticeBoardHero() {
   const noteStatus = hero.querySelector("[data-note-status]");
   let heroQuality = getHeroQualityProfile();
 
+  function getNavigatorCapability(name) {
+    const value = Number(window.navigator?.[name]);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function isLowEndHeroDevice() {
+    const deviceMemory = getNavigatorCapability("deviceMemory");
+    const hardwareConcurrency = getNavigatorCapability("hardwareConcurrency");
+
+    return (
+      (deviceMemory !== null && deviceMemory <= 4) ||
+      (hardwareConcurrency !== null && hardwareConcurrency <= 4)
+    );
+  }
+
   function getHeroQualityProfile() {
     const width = window.innerWidth;
-    const coarsePointer = hasCoarsePointer();
-
-    if (width <= 560 || coarsePointer) {
-      return {
-        antialias: false,
-        pixelRatioCap: 1,
-        shadows: false,
-        shadowMapSize: 0,
-        posterCount: 40,
-        posterHeight: 1.5,
-        motionScale: 0.58,
-        frameInterval: 1000 / 30,
-        textureSize: { width: 512, height: 384 },
-        maxAnisotropy: 2,
-      };
-    }
 
     if (width <= 800) {
+      const lowEndProfile = isLowEndHeroDevice();
+
       return {
-        antialias: false,
-        pixelRatioCap: 1.25,
+        antialias: !lowEndProfile,
+        pixelRatioCap: lowEndProfile ? 1.25 : 2,
         shadows: false,
         shadowMapSize: 0,
         posterCount: 40,
         posterHeight: 1.5,
-        motionScale: 0.74,
-        frameInterval: 1000 / 40,
-        textureSize: { width: 768, height: 576 },
-        maxAnisotropy: 4,
+        motionScale: width <= 560 ? 0.58 : 0.74,
+        frameInterval: lowEndProfile ? 1000 / 30 : 1000 / 40,
+        textureSize: lowEndProfile
+          ? { width: 768, height: 576 }
+          : { width: 1024, height: 768 },
+        maxAnisotropy: lowEndProfile ? 4 : 8,
       };
     }
 
@@ -1868,13 +1871,7 @@ async function setupNoticeBoardHero() {
       textureLoader.load(
         url,
         (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(
-            renderer.capabilities.getMaxAnisotropy(),
-            heroQuality.maxAnisotropy
-          );
-          texture.needsUpdate = true;
-          resolve(texture);
+          resolve(applyHeroTextureQuality(texture));
         },
         undefined,
         reject
@@ -1898,6 +1895,76 @@ async function setupNoticeBoardHero() {
     const width = image?.naturalWidth || image?.videoWidth || image?.width || 1;
     const height = image?.naturalHeight || image?.videoHeight || image?.height || 1;
     return width / height;
+  }
+
+  function getTextureDimensions(texture) {
+    const image = texture?.image;
+
+    return {
+      width: image?.naturalWidth || image?.videoWidth || image?.width || 0,
+      height: image?.naturalHeight || image?.videoHeight || image?.height || 0,
+    };
+  }
+
+  function canUseTextureMipmaps(texture) {
+    const { width, height } = getTextureDimensions(texture);
+    if (!width || !height) {
+      return false;
+    }
+
+    return (
+      renderer.capabilities.isWebGL2 ||
+      (THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height))
+    );
+  }
+
+  function applyHeroTextureQuality(texture) {
+    if (!texture) {
+      return texture;
+    }
+
+    const useMipmaps = canUseTextureMipmaps(texture);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = useMipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+    texture.generateMipmaps = useMipmaps;
+    texture.anisotropy = Math.min(
+      renderer.capabilities.getMaxAnisotropy(),
+      heroQuality.maxAnisotropy
+    );
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  function refreshHeroTextureQuality() {
+    const activeTextures = new Set();
+
+    noteMeshes.forEach((note) => {
+      if (note.material?.map) {
+        activeTextures.add(note.material.map);
+      }
+    });
+
+    activeTextures.forEach((texture) => {
+      applyHeroTextureQuality(texture);
+    });
+  }
+
+  function refreshUserNoteTexture(note) {
+    const motion = note.userData.motion;
+    if (!motion?.userNote || !motion.noteText || !motion.ownsTexture) {
+      return;
+    }
+
+    const currentTexture = note.material?.map;
+    const { width, height } = getTextureDimensions(currentTexture);
+    if (width === heroQuality.textureSize.width && height === heroQuality.textureSize.height) {
+      return;
+    }
+
+    note.material.map = buildCanvasNoteTexture(motion.noteText);
+    note.material.needsUpdate = true;
+    currentTexture?.dispose();
   }
 
   function randomBetween(min, max) {
@@ -2638,6 +2705,7 @@ async function setupNoticeBoardHero() {
 
     const motion = note.userData.motion;
     motion.isThrowing = true;
+    motion.noteText = text;
     bringToFront(note);
     motion.restX = targetX;
     motion.restY = targetY;
@@ -2728,9 +2796,7 @@ async function setupNoticeBoardHero() {
     context.fillText("DRAG IT. THROW IT. MAKE IT REAL.", canvasTexture.width / 2, footerY);
 
     const texture = new THREE.CanvasTexture(canvasTexture);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
+    return applyHeroTextureQuality(texture);
   }
 
   function wrapCanvasText(context, text, maxWidth) {
@@ -2768,6 +2834,9 @@ async function setupNoticeBoardHero() {
     renderer.setSize(width, height, false);
     renderer.shadowMap.enabled = heroQuality.shadows;
     keyLight.castShadow = heroQuality.shadows;
+    if (heroQuality.shadows) {
+      keyLight.shadow.mapSize.set(heroQuality.shadowMapSize, heroQuality.shadowMapSize);
+    }
     board.visible = heroQuality.shadows;
     board.receiveShadow = heroQuality.shadows;
 
@@ -2788,6 +2857,7 @@ async function setupNoticeBoardHero() {
       const motion = note.userData.motion;
       note.castShadow = heroQuality.shadows;
       note.receiveShadow = heroQuality.shadows;
+      refreshUserNoteTexture(note);
       if (!motion.responsive) {
         return;
       }
@@ -2806,6 +2876,7 @@ async function setupNoticeBoardHero() {
       }
     });
 
+    refreshHeroTextureQuality();
     applyHeroNoteLayout();
   }
 
