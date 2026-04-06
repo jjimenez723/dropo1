@@ -6,7 +6,7 @@
     <title>For Designers | DROP 01 Atelier</title>
     <meta
       name="description"
-      content="DROP 01 supports independent designers with limited, preorder-based drops shaped around concept, launch, production, and fulfillment."
+      content="DROP 01 is built for the people behind the work, supporting independent designers with artist-first drops, community, and practical help from concept to release."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,13 +40,14 @@
     <main class="page-main">
       <section class="section contact-intro">
         <div class="section-head section-head--wide reveal">
-          <p class="eyebrow">For designers</p>
-          <h1 class="title-lg">Independent fashion work, launched through limited, preorder-based drops.</h1>
+          <p class="eyebrow">For the people</p>
+          <h1 class="title-lg">The company should never be bigger than the artist.</h1>
           <p class="lede">
-            DROP 01 supports independent designers with limited, preorder-based drops. We align
-            concept refinement, launch strategy, production logistics, and customer fulfillment so
-            the work can stay sharp from first sketch to final shipment. Most pieces on the site
-            are preorder-first, so launches stay focused and demand-led.
+            DROP 01 is for the people behind the work. We collaborate with designers through
+            limited releases built on trust, self-expression, and real support, helping turn
+            emotion, craft, and point of view into clear opportunities. Our role is to help each
+            artist grow into the strongest version of themselves while keeping the work, the
+            community, and the love behind it at the center.
           </p>
         </div>
       </section>
@@ -57,27 +58,27 @@
             class="designer-form multi-step"
             data-multistep-form
             data-webhook-form="designer-intake"
-            data-success-message="Your designer application has been submitted. Expect a follow-up from the curation team soon."
+            data-success-message="Your work has been received. We will review it with the artist and the idea first, then follow up with next steps."
           >
             <div class="step-indicator" aria-hidden="true">
-              <span class="is-active" data-step-marker>Profile</span>
-              <span data-step-marker>Drop</span>
-              <span data-step-marker>Production</span>
+              <span class="is-active" data-step-marker>Artist</span>
+              <span data-step-marker>Expression</span>
+              <span data-step-marker>Support</span>
             </div>
 
             <section class="form-step is-active" aria-hidden="false">
               <div class="form-grid">
                 <div class="field">
                   <label for="designer-name">Name</label>
-                  <input id="designer-name" name="name" type="text" placeholder="Your full name" required />
+                  <input id="designer-name" name="name" type="text" placeholder="Your name" required />
                 </div>
                 <div class="field">
                   <label for="designer-email">Email</label>
-                  <input id="designer-email" name="email" type="email" placeholder="studio@email.com" required />
+                  <input id="designer-email" name="email" type="email" placeholder="you@studio.com" required />
                 </div>
               </div>
               <div class="field">
-                <label for="designer-portfolio">Portfolio or studio link</label>
+                <label for="designer-portfolio">Portfolio, Instagram, or studio link</label>
                 <input
                   id="designer-portfolio"
                   name="portfolio"
@@ -92,7 +93,7 @@
                 />
               </div>
               <div class="field">
-                <label for="designer-location">Studio location</label>
+                <label for="designer-location">Where are you creating from?</label>
                 <input id="designer-location" name="location" type="text" placeholder="City, Country" />
               </div>
               <div class="step-actions">
@@ -103,8 +104,8 @@
 
             <section class="form-step" aria-hidden="true">
               <div class="field">
-                <label for="designer-piece">Hero piece or collection name</label>
-                <input id="designer-piece" name="piece" type="text" placeholder="Name the drop or lead piece" required />
+                <label for="designer-piece">Project, piece, or collection name</label>
+                <input id="designer-piece" name="piece" type="text" placeholder="Name the work you want people to see" required />
               </div>
               <div class="form-grid">
                 <div class="field">
@@ -118,16 +119,16 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="designer-target">Target release window</label>
-                  <input id="designer-target" name="target" type="text" placeholder="May 2026 / Summer drop" />
+                  <label for="designer-target">When do you want to release it?</label>
+                  <input id="designer-target" name="target" type="text" placeholder="Summer 2026 / when the work feels ready" />
                 </div>
               </div>
               <div class="field">
-                <label for="designer-concept">Drop concept</label>
+                <label for="designer-concept">What does this work express?</label>
                 <textarea
                   id="designer-concept"
                   name="concept"
-                  placeholder="Describe the point of view, silhouette, customer, and why this release matters now."
+                  placeholder="Tell us what people should feel, what the work says about you, and why this release matters right now."
                   required
                 ></textarea>
               </div>
@@ -140,30 +141,30 @@
             <section class="form-step" aria-hidden="true">
               <div class="form-grid">
                 <div class="field">
-                  <label for="designer-stage">Prototype stage</label>
+                  <label for="designer-stage">Where is the work now?</label>
                   <select id="designer-stage" name="stage">
-                    <option>Sketches and references</option>
+                    <option>Idea, sketches, and references</option>
                     <option>Toile or first sample</option>
                     <option>Fitted sample</option>
                     <option>Production-ready sample</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label for="designer-scale">Ideal batch size</label>
-                  <input id="designer-scale" name="scale" type="text" placeholder="30-60 units" />
+                  <label for="designer-scale">What scale feels right?</label>
+                  <input id="designer-scale" name="scale" type="text" placeholder="Preorder only / 30-60 units / limited run" />
                 </div>
               </div>
               <div class="field">
-                <label for="designer-support">Where support is needed most</label>
+                <label for="designer-support">What support would help you grow this release?</label>
                 <textarea
                   id="designer-support"
                   name="support"
-                  placeholder="Production, sourcing, launch assets, fulfillment, pricing, or another blocker."
+                  placeholder="Sampling, sourcing, pricing, storytelling, launch planning, fulfillment, or building the right community around it."
                 ></textarea>
               </div>
               <div class="step-actions">
                 <button class="button-ghost" type="button" data-prev data-hover-lift>Back</button>
-                <button class="button" type="submit" data-hover-lift>Submit application</button>
+                <button class="button" type="submit" data-hover-lift>Share your work</button>
               </div>
             </section>
           </form>
