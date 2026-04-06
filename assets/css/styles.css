@@ -450,7 +450,7 @@ body.images-hidden .editorial-card--stacked {
 }
 
 .button--designer-intake {
-  margin-block: 5vw;
+  margin-block: 0;
 }
 
 .button:hover,
@@ -1554,12 +1554,16 @@ body.is-dragging-notice-board {
   min-height: 100%;
 }
 
+.contact-card .button-row {
+  margin-top: 8px;
+}
+
 .contact-card__links {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: auto;
-  justify-content: flex-end;
+  margin-top: 0;
+  justify-content: flex-start;
 }
 
 .contact-card__links a {
