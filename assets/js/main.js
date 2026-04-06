@@ -1854,7 +1854,7 @@ async function setupNoticeBoardHero() {
       noteInput.disabled = false;
     }
     if (noteStatus) {
-      noteStatus.textContent = "Type a note and pin it to the board.";
+      noteStatus.textContent = " ";
     }
 
     window.addEventListener("resize", requestResizeScene, { passive: true });
@@ -2889,7 +2889,7 @@ async function setupNoticeBoardHero() {
 
   function resizeScene() {
     heroQuality = getHeroQualityProfile();
-    const bounds = hero.getBoundingClientRect();
+    const bounds = boardShell?.getBoundingClientRect() ?? hero.getBoundingClientRect();
     const width = Math.max(bounds.width, 1);
     const height = Math.max(bounds.height, 1);
     const aspect = width / height;
