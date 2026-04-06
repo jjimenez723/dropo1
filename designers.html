@@ -6,7 +6,7 @@
     <title>For Designers | DROP 01 Atelier</title>
     <meta
       name="description"
-      content="DROP 01 supports independent designers with limited, preorder-based drops shaped around concept, launch, production, and fulfillment."
+      content="DROP 01 helps independent designers grow through artist-first releases, community support, and demand-led production."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,12 +41,13 @@
       <section class="section contact-intro">
         <div class="section-head section-head--wide reveal">
           <p class="eyebrow">For designers</p>
-          <h1 class="title-lg">Independent fashion work, launched through limited, preorder-based drops.</h1>
+          <h1 class="title-lg">The platform should never be bigger than the artist.</h1>
           <p class="lede">
-            DROP 01 supports independent designers with limited, preorder-based drops. We align
-            concept refinement, launch strategy, production logistics, and customer fulfillment so
-            the work can stay sharp from first sketch to final shipment. Most pieces on the site
-            are preorder-first, so launches stay focused and demand-led.
+            DROP 01 exists to help independent designers grow through real support, not
+            extraction. Creativity is emotion and self-expression. We help shape production,
+            launch strategy, storytelling, and fulfillment so your work can reach people without
+            losing its point of view. Every release is built to honor the artist, invite
+            community, and prove what the work can become.
           </p>
         </div>
       </section>
@@ -57,12 +58,12 @@
             class="designer-form multi-step"
             data-multistep-form
             data-webhook-form="designer-intake"
-            data-success-message="Your designer application has been submitted. Expect a follow-up from the curation team soon."
+            data-success-message="Your work has been submitted. Expect a follow-up with next steps and support."
           >
             <div class="step-indicator" aria-hidden="true">
               <span class="is-active" data-step-marker>Profile</span>
-              <span data-step-marker>Drop</span>
-              <span data-step-marker>Production</span>
+              <span data-step-marker>Work</span>
+              <span data-step-marker>Support</span>
             </div>
 
             <section class="form-step is-active" aria-hidden="false">
@@ -77,7 +78,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="designer-portfolio">Portfolio or studio link</label>
+                <label for="designer-portfolio">Portfolio, studio link, or Instagram</label>
                 <input
                   id="designer-portfolio"
                   name="portfolio"
@@ -86,13 +87,13 @@
                   autocomplete="url"
                   autocapitalize="off"
                   spellcheck="false"
-                  placeholder="your-portfolio.com"
+                  placeholder="your-portfolio.com / @yourstudio"
                   data-simple-url
                   required
                 />
               </div>
               <div class="field">
-                <label for="designer-location">Studio location</label>
+                <label for="designer-location">Where are you based?</label>
                 <input id="designer-location" name="location" type="text" placeholder="City, Country" />
               </div>
               <div class="step-actions">
@@ -103,8 +104,8 @@
 
             <section class="form-step" aria-hidden="true">
               <div class="field">
-                <label for="designer-piece">Hero piece or collection name</label>
-                <input id="designer-piece" name="piece" type="text" placeholder="Name the drop or lead piece" required />
+                <label for="designer-piece">Lead piece or collection name</label>
+                <input id="designer-piece" name="piece" type="text" placeholder="Name the piece or body of work" required />
               </div>
               <div class="form-grid">
                 <div class="field">
@@ -118,16 +119,16 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="designer-target">Target release window</label>
-                  <input id="designer-target" name="target" type="text" placeholder="May 2026 / Summer drop" />
+                  <label for="designer-target">Ideal release window</label>
+                  <input id="designer-target" name="target" type="text" placeholder="Month / season / when it should be seen" />
                 </div>
               </div>
               <div class="field">
-                <label for="designer-concept">Drop concept</label>
+                <label for="designer-concept">What is this work expressing?</label>
                 <textarea
                   id="designer-concept"
                   name="concept"
-                  placeholder="Describe the point of view, silhouette, customer, and why this release matters now."
+                  placeholder="Tell us what this work says, who it is for, and why it matters now."
                   required
                 ></textarea>
               </div>
@@ -140,30 +141,30 @@
             <section class="form-step" aria-hidden="true">
               <div class="form-grid">
                 <div class="field">
-                  <label for="designer-stage">Prototype stage</label>
+                  <label for="designer-stage">Where is the work now?</label>
                   <select id="designer-stage" name="stage">
-                    <option>Sketches and references</option>
+                    <option>Early sketches and references</option>
                     <option>Toile or first sample</option>
                     <option>Fitted sample</option>
                     <option>Production-ready sample</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label for="designer-scale">Ideal batch size</label>
-                  <input id="designer-scale" name="scale" type="text" placeholder="30-60 units" />
+                  <label for="designer-scale">Ideal first run</label>
+                  <input id="designer-scale" name="scale" type="text" placeholder="Small batch or preorder goal" />
                 </div>
               </div>
               <div class="field">
-                <label for="designer-support">Where support is needed most</label>
+                <label for="designer-support">Where would support help most?</label>
                 <textarea
                   id="designer-support"
                   name="support"
-                  placeholder="Production, sourcing, launch assets, fulfillment, pricing, or another blocker."
+                  placeholder="Production, sourcing, pricing, launch, storytelling, fulfillment, or another barrier."
                 ></textarea>
               </div>
               <div class="step-actions">
                 <button class="button-ghost" type="button" data-prev data-hover-lift>Back</button>
-                <button class="button" type="submit" data-hover-lift>Submit application</button>
+                <button class="button" type="submit" data-hover-lift>Share your work</button>
               </div>
             </section>
           </form>
