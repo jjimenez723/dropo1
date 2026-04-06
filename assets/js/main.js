@@ -1854,7 +1854,11 @@ async function setupNoticeBoardHero() {
       noteInput.disabled = false;
     }
     if (noteStatus) {
+<<<<<<< HEAD
       noteStatus.textContent = "Type a thought and pin it to the wall.";
+=======
+      noteStatus.textContent = " ";
+>>>>>>> 129d1545f101b8c04b95141f0ca2929739cd73d5
     }
 
     window.addEventListener("resize", requestResizeScene, { passive: true });
@@ -2889,7 +2893,7 @@ async function setupNoticeBoardHero() {
 
   function resizeScene() {
     heroQuality = getHeroQualityProfile();
-    const bounds = hero.getBoundingClientRect();
+    const bounds = boardShell?.getBoundingClientRect() ?? hero.getBoundingClientRect();
     const width = Math.max(bounds.width, 1);
     const height = Math.max(bounds.height, 1);
     const aspect = width / height;

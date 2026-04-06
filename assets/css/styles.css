@@ -183,14 +183,14 @@ body.images-hidden .editorial-card--stacked {
 }
 
 .site-nav--left {
-  justify-self: end;
-  justify-content: flex-end;
+  justify-self: stretch;
+  justify-content: flex-start;
   padding-top: 12px;
 }
 
 .site-nav--right {
-  justify-self: start;
-  justify-content: flex-start;
+  justify-self: stretch;
+  justify-content: flex-end;
   padding-top: 12px;
 }
 
@@ -450,7 +450,7 @@ body.images-hidden .editorial-card--stacked {
 }
 
 .button--designer-intake {
-  margin-block: 5vw;
+  margin-block: 0;
 }
 
 .button:hover,
@@ -482,8 +482,9 @@ body.images-hidden .editorial-card--stacked {
 }
 
 .hero {
+  --hero-frame-min-height: calc(100vh - var(--nav-height) - 24px);
   width: min(1320px, calc(100vw - 32px));
-  min-height: calc(100vh - var(--nav-height) - 24px);
+  min-height: var(--hero-frame-min-height);
   margin: 24px auto 0;
   position: relative;
 }
@@ -507,13 +508,15 @@ body.images-hidden .editorial-card--stacked {
   --hero-panel-min-height: clamp(220px, 20vw, 276px);
   --hero-panel-column-width: calc((100% - var(--hero-panel-gap)) / 2);
   position: relative;
-  min-height: min(980px, calc(100vh - var(--nav-height) - 24px));
+  min-height: min(980px, var(--hero-frame-min-height));
   padding: clamp(24px, 4vw, 42px);
   padding-bottom: clamp(48px, 6vw, 84px);
   isolation: isolate;
 }
 
 .hero__board {
+  --hero-board-image-position: center center;
+  --hero-board-image-size: cover;
   position: absolute;
   inset: 0;
   contain: paint;
@@ -529,7 +532,7 @@ body.images-hidden .editorial-card--stacked {
       transparent 24%
     ),
     linear-gradient(rgba(14, 16, 18, 0.42), rgba(14, 16, 18, 0.62)),
-    url("../../cork background.avif") center / cover no-repeat;
+    url("../../cork background.avif") var(--hero-board-image-position) / var(--hero-board-image-size) no-repeat;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -1551,12 +1554,16 @@ body.is-dragging-notice-board {
   min-height: 100%;
 }
 
+.contact-card .button-row {
+  margin-top: 8px;
+}
+
 .contact-card__links {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: auto;
-  justify-content: flex-end;
+  margin-top: 0;
+  justify-content: flex-start;
 }
 
 .contact-card__links a {
@@ -1772,6 +1779,14 @@ body.is-dragging-notice-board {
   transform: translateY(32px);
 }
 
+@media (min-width: 801px) {
+  .page-home .hero-note-form {
+    width: clamp(480px, 52vw, 580px);
+    max-width: none;
+    justify-self: center;
+  }
+}
+
 @media (max-width: 1350px) {
   .site-header__inner {
     gap: 14px;
@@ -1903,8 +1918,8 @@ body.is-dragging-notice-board {
   }
 
   .hero {
+    --hero-frame-min-height: calc(100vh - 24px);
     border-radius: 30px;
-    min-height: calc(100vh - 24px);
     margin-top: 14px;
   }
 
@@ -1915,9 +1930,14 @@ body.is-dragging-notice-board {
     --hero-stage-left: 28px;
     --hero-panel-gap: 16px;
     --hero-panel-min-height: clamp(188px, 36vw, 232px);
-    min-height: clamp(820px, 158vw, 920px);
+    min-height: max(clamp(820px, 158vw, 920px), calc(var(--hero-frame-min-height) - 2px));
     padding: 22px;
     padding-bottom: 22px;
+  }
+
+  .hero__board {
+    --hero-board-image-position: 50% 62%;
+    --hero-board-image-size: auto 108%;
   }
 
   .hero__overlay {
@@ -1934,8 +1954,8 @@ body.is-dragging-notice-board {
   .hero__mobile-header {
     display: grid;
     width: 100%;
-    gap: 16px;
-    padding: 18px 18px 20px;
+    gap: 10px;
+    padding: 12px 18px 14px;
     border-radius: 24px;
     border: 1px solid rgb(var(--accent-rgb) / 0.2);
     background: rgba(255, 255, 255, 0.96);
@@ -2047,6 +2067,13 @@ body.is-dragging-notice-board {
   }
 }
 
+@media (max-width: 680px) {
+  .hero__board {
+    --hero-board-image-position: 52% 68%;
+    --hero-board-image-size: auto 114%;
+  }
+}
+
 @media (max-width: 560px) {
   .brand__logo {
     width: clamp(76px, 28vw, 98px);
@@ -2067,13 +2094,18 @@ body.is-dragging-notice-board {
     --hero-stage-bottom: 472px;
     --hero-stage-left: 18px;
     --hero-panel-min-height: clamp(176px, 44vw, 216px);
-    min-height: clamp(720px, 188vw, 860px);
+    min-height: max(clamp(720px, 188vw, 860px), calc(var(--hero-frame-min-height) - 2px));
     padding: 16px 14px 18px;
   }
 
+  .hero__board {
+    --hero-board-image-position: 54% 72%;
+    --hero-board-image-size: auto 120%;
+  }
+
   .hero__mobile-header {
-    gap: 14px;
-    padding: 16px 14px 18px;
+    gap: 8px;
+    padding: 10px 14px 12px;
     border-radius: 22px;
   }
 
