@@ -1836,7 +1836,7 @@ async function setupNoticeBoardHero() {
   }
 
   if (noteStatus) {
-    noteStatus.textContent = "Loading the board...";
+    noteStatus.textContent = "Preparing the wall...";
   }
 
   try {
@@ -1854,7 +1854,7 @@ async function setupNoticeBoardHero() {
       noteInput.disabled = false;
     }
     if (noteStatus) {
-      noteStatus.textContent = " ";
+      noteStatus.textContent = "Type a thought and pin it to the wall.";
     }
 
     window.addEventListener("resize", requestResizeScene, { passive: true });
@@ -1864,7 +1864,7 @@ async function setupNoticeBoardHero() {
   } catch (error) {
     console.error("DROP 01 notice board failed to initialize.", error);
     if (noteStatus) {
-      noteStatus.textContent = "The board could not load right now. Refresh and try again.";
+      noteStatus.textContent = "The wall could not load right now. Refresh and try again.";
     }
   }
 
@@ -2468,13 +2468,13 @@ async function setupNoticeBoardHero() {
       event.preventDefault();
       const text = noteInput.value.trim();
       if (!text) {
-        updateNoteStatus("Write something first, then pin it.");
+        updateNoteStatus("Write something from the heart, then pin it.");
         return;
       }
 
       addUserNote(text);
       noteInput.value = "";
-      updateNoteStatus("Pinned to the board.");
+      updateNoteStatus("Pinned to the wall.");
 
       const webhookUrl = webhookMap["hero-note"];
       if (!webhookUrl) {
@@ -2485,7 +2485,7 @@ async function setupNoticeBoardHero() {
       const payload = buildHeroNotePayload(text);
       void postJson(webhookUrl, payload).catch((error) => {
         console.error("DROP 01 hero note submission failed.", error);
-        updateNoteStatus("Pinned to the board. Remote sync unavailable right now.");
+        updateNoteStatus("Pinned to the wall. Remote sync is unavailable right now.");
       });
     });
   }
