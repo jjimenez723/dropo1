@@ -24,6 +24,8 @@
   --sans:
     "Helvetica Neue Condensed", "Helvetica Neue", "Arial Narrow", Arial,
     sans-serif;
+  --nav-sans:
+    "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --serif:
     "Helvetica Neue Condensed", "Helvetica Neue", "Arial Narrow", Arial,
     sans-serif;
@@ -196,6 +198,8 @@ body.images-hidden .editorial-card--stacked {
 
 .site-nav a {
   position: relative;
+  font-family: var(--nav-sans);
+  font-weight: 300;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.24em;
@@ -375,6 +379,11 @@ body.images-hidden .editorial-card--stacked {
 
 .contact-intro {
   padding-top: 50px;
+  text-align: center;
+}
+
+.contact-intro .section-head {
+  margin-inline: auto;
 }
 
 .title-xl,
@@ -626,6 +635,8 @@ body.images-hidden .editorial-card--stacked {
 
 .hero__mobile-nav-row a {
   position: relative;
+  font-family: var(--nav-sans);
+  font-weight: 300;
   font-size: 0.64rem;
   text-transform: uppercase;
   letter-spacing: 0.24em;
@@ -2221,6 +2232,24 @@ body.is-dragging-notice-board {
   padding-bottom: 72px;
 }
 
+.page-home .hero {
+  --hero-frame-min-height: 100dvh;
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+}
+
+.page-home .notice-board-hero {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  box-shadow: none;
+}
+
+.page-home .hero__board-shell {
+  min-height: 100dvh;
+}
+
 .page-home .site-header {
   background: rgba(255, 255, 255, 0.96);
   box-shadow: none;
@@ -2371,12 +2400,16 @@ body.is-dragging-notice-board {
 }
 
 .page-about .page-main {
-  padding-top: clamp(28px, 5vw, 72px);
+  padding-top: clamp(72px, 10vw, 140px);
 }
 
 .page-about .section-head--wide {
   max-width: min(1240px, calc(100vw - 96px));
   gap: clamp(20px, 2.4vw, 32px);
+  margin-left: auto;
+  margin-right: auto;
+  justify-items: center;
+  text-align: center;
 }
 
 .page-about .title-lg {
@@ -2384,6 +2417,8 @@ body.is-dragging-notice-board {
   line-height: 1.02;
   letter-spacing: -0.025em;
   text-transform: uppercase;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .page-about .lede {
@@ -2392,6 +2427,36 @@ body.is-dragging-notice-board {
   line-height: 1.52;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-designers .section-head--wide {
+  max-width: min(1240px, calc(100vw - 96px));
+  gap: clamp(20px, 2.4vw, 32px);
+  margin-left: auto;
+  margin-right: auto;
+  justify-items: center;
+  text-align: center;
+}
+
+.page-designers .title-lg {
+  max-width: 14ch;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-designers .lede {
+  max-width: 54rem;
+  font-size: clamp(1.1rem, 1.4vw, 1.55rem);
+  line-height: 1.52;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 900px) {
@@ -2413,7 +2478,7 @@ body.is-dragging-notice-board {
   }
 
   .page-about .page-main {
-    padding-top: 20px;
+    padding-top: 40px;
   }
 
   .page-about .section-head--wide {
@@ -2426,6 +2491,20 @@ body.is-dragging-notice-board {
   }
 
   .page-about .lede {
+    font-size: 1rem;
+    letter-spacing: 0.025em;
+  }
+
+  .page-designers .section-head--wide {
+    max-width: min(100%, calc(100vw - 32px));
+  }
+
+  .page-designers .title-lg {
+    max-width: none;
+    line-height: 1.04;
+  }
+
+  .page-designers .lede {
     font-size: 1rem;
     letter-spacing: 0.025em;
   }
