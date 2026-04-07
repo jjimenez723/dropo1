@@ -1636,6 +1636,8 @@ async function setupNoticeBoardHero() {
   const noteForm = hero.querySelector("[data-note-form]");
   const noteInput = hero.querySelector("[data-note-input]");
   const noteStatus = hero.querySelector("[data-note-status]");
+  const heroSharedPaperHeight = 3.18;
+  const heroPosterHeightRatio = 0.95;
   let heroQuality = getHeroQualityProfile();
 
   function getNavigatorCapability(name) {
@@ -1664,8 +1666,9 @@ async function setupNoticeBoardHero() {
         pixelRatioCap: lowEndProfile ? 1.25 : 2,
         shadows: false,
         shadowMapSize: 0,
-        posterCount: 40,
-        posterHeight: 1.5,
+        posterHeight: heroSharedPaperHeight * heroPosterHeightRatio,
+        posterSpacingX: lowEndProfile ? 0.82 : 0.78,
+        posterSpacingY: lowEndProfile ? 0.76 : 0.72,
         motionScale: width <= 560 ? 0.58 : 0.74,
         frameInterval: lowEndProfile ? 1000 / 30 : 1000 / 40,
         textureSize: lowEndProfile
@@ -1680,8 +1683,9 @@ async function setupNoticeBoardHero() {
       pixelRatioCap: 1.8,
       shadows: true,
       shadowMapSize: 2048,
-      posterCount: 70,
-      posterHeight: 2,
+      posterHeight: heroSharedPaperHeight * heroPosterHeightRatio,
+      posterSpacingX: 0.72,
+      posterSpacingY: 0.68,
       motionScale: 1,
       frameInterval: 1000 / 60,
       textureSize: { width: 1024, height: 768 },
@@ -2077,19 +2081,46 @@ async function setupNoticeBoardHero() {
   }
 
   function buildBackgroundLayer(posterTexture) {
-    // The poster field should feel dense and imperfect, like a real board that
-    // has been layered over time rather than algorithmically tiled.
-    const posterCount = heroQuality.posterCount;
+    // Build a staggered field so the wall reads like a densely pinned corkboard
+    // with controlled variation instead of a fully random scatter.
+    const posterHeight = heroQuality.posterHeight;
+    const posterWidth = posterHeight * textureAspect(posterTexture);
+    const stepX = posterWidth * heroQuality.posterSpacingX;
+    const stepY = posterHeight * heroQuality.posterSpacingY;
+    const overscanX = posterWidth * 1.1;
+    const overscanY = posterHeight * 1.05;
+    const startX = -view.halfWidth - overscanX;
+    const endX = view.halfWidth + overscanX;
+    const startY = -view.halfHeight - overscanY;
+    const endY = view.halfHeight + overscanY;
+    const columnCount = Math.ceil((endX - startX) / Math.max(stepX, 0.001)) + 1;
+    const rowCount = Math.ceil((endY - startY) / Math.max(stepY, 0.001)) + 1;
 
-    for (let index = 0; index < posterCount; index += 1) {
-      createNoteMesh({
-        texture: posterTexture,
-        height: heroQuality.posterHeight,
-        x: randomBetween(-view.halfWidth * 1.08, view.halfWidth * 1.08),
-        y: randomBetween(-view.halfHeight * 1.04, view.halfHeight * 1.06),
-        z: randomBetween(-5.5, -0.6),
-        rotationZ: randomBetween(-0.7, 0.7),
-      });
+    for (let row = 0; row < rowCount; row += 1) {
+      const rowOffset = row % 2 === 0 ? 0 : stepX * 0.44;
+      const rowTilt = ((row % 3) - 1) * 0.05;
+      const rowWave = ((row % 4) - 1.5) * posterHeight * 0.022;
+
+      for (let column = 0; column < columnCount; column += 1) {
+        const columnTilt = ((column % 5) - 2) * 0.022;
+
+        createNoteMesh({
+          texture: posterTexture,
+          height: posterHeight,
+          x:
+            startX +
+            column * stepX +
+            rowOffset +
+            randomBetween(-posterWidth * 0.08, posterWidth * 0.08),
+          y:
+            startY +
+            row * stepY +
+            rowWave +
+            randomBetween(-posterHeight * 0.07, posterHeight * 0.07),
+          z: randomBetween(-5.8, -0.85),
+          rotationZ: rowTilt + columnTilt + randomBetween(-0.03, 0.03),
+        });
+      }
     }
   }
 
@@ -2343,16 +2374,15 @@ async function setupNoticeBoardHero() {
   }
 
   function buildHeroNotes(textures) {
-    const sharedPaperHeight = 3.18;
     const heroConfigs = [
-      { key: "d", texture: textures.d, height: sharedPaperHeight },
-      { key: "r", texture: textures.r, height: sharedPaperHeight },
-      { key: "o", texture: textures.o, height: sharedPaperHeight },
-      { key: "p", texture: textures.p, height: sharedPaperHeight },
-      { key: "zero", texture: textures.zero, height: sharedPaperHeight },
-      { key: "one", texture: textures.one, height: sharedPaperHeight },
-      { key: "orange", texture: textures.orange, height: sharedPaperHeight },
-      { key: "pink", texture: textures.pink, height: sharedPaperHeight },
+      { key: "d", texture: textures.d, height: heroSharedPaperHeight },
+      { key: "r", texture: textures.r, height: heroSharedPaperHeight },
+      { key: "o", texture: textures.o, height: heroSharedPaperHeight },
+      { key: "p", texture: textures.p, height: heroSharedPaperHeight },
+      { key: "zero", texture: textures.zero, height: heroSharedPaperHeight },
+      { key: "one", texture: textures.one, height: heroSharedPaperHeight },
+      { key: "orange", texture: textures.orange, height: heroSharedPaperHeight },
+      { key: "pink", texture: textures.pink, height: heroSharedPaperHeight },
     ];
 
     heroConfigs.forEach((config, index) => {
