@@ -715,9 +715,25 @@ function buildFormDraftData(form) {
   );
 }
 
+function getCurrentPageSlug(pathname = window.location.pathname) {
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (!segments.length) {
+    return "index";
+  }
+
+  const lastSegment = segments[segments.length - 1];
+
+  if (/^index\.html?$/i.test(lastSegment) || lastSegment === "index") {
+    return segments[segments.length - 2] || "index";
+  }
+
+  return lastSegment.replace(/\.html$/i, "") || "index";
+}
+
 function getFormDraftKey(form) {
   const webhookKey = form.getAttribute("data-webhook-form") || "form";
-  const page = window.location.pathname.split("/").pop() || "index.html";
+  const page = getCurrentPageSlug();
   const formId = form.id || form.getAttribute("name") || form.getAttribute("data-form-id") || "";
 
   return `${page}::${webhookKey}::${formId}`;
@@ -825,7 +841,7 @@ function buildSubmissionContext(now = new Date()) {
   const viewportHeight = Number.isFinite(window.innerHeight) ? window.innerHeight : 0;
 
   return {
-    page: window.location.pathname.split("/").pop() || "index.html",
+    page: getCurrentPageSlug(),
     sourceUrl: window.location.href,
     referrer: document.referrer || "",
     language: navigator.language || "",
