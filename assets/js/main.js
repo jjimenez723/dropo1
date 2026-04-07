@@ -88,12 +88,78 @@ function setupHeaderMotion() {
     return;
   }
 
+  let lastScrollY = window.scrollY;
+  let isHidden = false;
+  let frameId = null;
+
+  const showHeader = (immediate = false) => {
+    if (!isHidden && !immediate) {
+      return;
+    }
+
+    isHidden = false;
+    header.classList.remove("is-hidden");
+    gsap.to(header, {
+      yPercent: 0,
+      autoAlpha: 1,
+      duration: immediate || prefersReducedMotion ? 0 : 0.42,
+      ease: "power3.out",
+      overwrite: true,
+    });
+  };
+
+  const hideHeader = () => {
+    if (isHidden) {
+      return;
+    }
+
+    isHidden = true;
+    header.classList.add("is-hidden");
+    gsap.to(header, {
+      yPercent: -115,
+      autoAlpha: 0,
+      duration: prefersReducedMotion ? 0 : 0.34,
+      ease: "power2.out",
+      overwrite: true,
+    });
+  };
+
+  const updateHeaderVisibility = () => {
+    const currentScrollY = window.scrollY;
+    const scrollDelta = currentScrollY - lastScrollY;
+    const nearTop = currentScrollY <= 24;
+
+    if (nearTop || scrollDelta < -6) {
+      showHeader();
+    } else if (scrollDelta > 6 && currentScrollY > header.offsetHeight * 0.75) {
+      hideHeader();
+    }
+
+    lastScrollY = currentScrollY;
+    frameId = null;
+  };
+
+  const handleScroll = () => {
+    if (frameId !== null) {
+      return;
+    }
+
+    frameId = window.requestAnimationFrame(updateHeaderVisibility);
+  };
+
   header.classList.remove("is-hidden");
   gsap.set(header, {
     yPercent: 0,
     autoAlpha: 1,
     backgroundColor: "#ffffff",
     boxShadow: "0 16px 36px rgba(0, 0, 0, 0.08)",
+  });
+
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  window.addEventListener("resize", () => {
+    if (isHidden) {
+      gsap.set(header, { yPercent: -115 });
+    }
   });
 }
 
