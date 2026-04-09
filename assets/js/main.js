@@ -1841,6 +1841,16 @@ async function setupNoticeBoardHero() {
     orange: -0.04,
     pink: 0.03,
   };
+  const heroNoteAlignmentOffsets = {
+    d: { x: -0.085, y: 0.072 },
+    r: { x: -0.03, y: -0.048 },
+    o: { x: 0.032, y: 0.054 },
+    p: { x: -0.042, y: -0.062 },
+    zero: { x: 0.038, y: 0.044 },
+    one: { x: -0.02, y: -0.088 },
+    orange: { x: 0.054, y: 0.066 },
+    pink: { x: 0.03, y: -0.036 },
+  };
   const heroLayoutPresets = {
     desktop: {
       lineY: 0.5,
@@ -2415,14 +2425,17 @@ async function setupNoticeBoardHero() {
         const aspect = motion.width / Math.max(motion.height, 0.001);
         const noteWidth = rowHeight * aspect;
         const centerX = cursor + noteWidth / 2;
+        const alignmentOffset = heroNoteAlignmentOffsets[key] || {};
+        const offsetX = rowHeight * (alignmentOffset.x || 0);
+        const offsetY = rowHeight * (alignmentOffset.y || 0);
         const z = logoFrontStartZ + noteIndex * 0.18;
         const scale = rowHeight / Math.max(motion.baseHeight, 0.001);
 
-        motion.restX = centerX;
-        motion.restY = lineY;
+        motion.restX = centerX + offsetX;
+        motion.restY = lineY + offsetY;
         motion.restZ = z;
-        motion.homeX = centerX;
-        motion.homeY = lineY;
+        motion.homeX = motion.restX;
+        motion.homeY = motion.restY;
         motion.homeZ = z;
         motion.restRotationZ = heroNoteRotations[key] ?? 0;
         motion.homeRotationZ = motion.restRotationZ;
@@ -2431,7 +2444,7 @@ async function setupNoticeBoardHero() {
         note.renderOrder = Math.round(z * 10);
 
         if (!motion.isDragging && !motion.isThrowing) {
-          note.position.set(centerX, lineY, z);
+          note.position.set(motion.restX, motion.restY, z);
           note.rotation.z = motion.restRotationZ;
         }
 
