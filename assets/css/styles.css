@@ -2465,7 +2465,8 @@ body.is-dragging-notice-board {
 }
 
 .page-designers .title-lg {
-  max-width: 14ch;
+  width: 80vw;
+  max-width: 80vw;
   line-height: 1.02;
   letter-spacing: -0.025em;
   text-transform: uppercase;
