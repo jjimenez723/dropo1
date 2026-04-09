@@ -508,10 +508,12 @@ body.images-hidden .editorial-card--stacked {
 
 .hero__board-shell {
   /* JS reads these insets to keep the SVG note cluster clear of the hero panels. */
-  --hero-stage-top: 348px;
+  --hero-stage-top: 160px;
   --hero-stage-right: 72px;
   --hero-stage-bottom: 88px;
   --hero-stage-left: 72px;
+  --hero-wordmark-line-y: 0.04;
+  --hero-form-offset-y: clamp(120px, 18vh, 220px);
   --hero-panel-gap: clamp(18px, 3vw, 30px);
   --hero-panel-max-width: 460px;
   --hero-panel-min-height: clamp(220px, 20vw, 276px);
@@ -1791,10 +1793,30 @@ body.is-dragging-notice-board {
 }
 
 @media (min-width: 801px) {
+  .page-home .hero__overlay {
+    position: absolute;
+    inset: 0;
+    width: min(100%, 980px);
+    min-height: 100%;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 42px) clamp(24px, 4vw, 42px) clamp(48px, 6vw, 84px);
+    justify-items: center;
+    align-content: center;
+  }
+
   .page-home .hero-note-form {
     width: clamp(480px, 52vw, 580px);
     max-width: none;
+    min-height: clamp(148px, 12vw, 176px);
+    padding: 16px 18px;
+    gap: 10px;
     justify-self: center;
+    margin-top: var(--hero-form-offset-y);
+  }
+
+  .page-home .hero-note-form input,
+  .page-home .hero-note-form .button {
+    min-height: 50px;
   }
 }
 
@@ -1816,10 +1838,12 @@ body.is-dragging-notice-board {
   }
 
   .hero__board-shell {
-    --hero-stage-top: 300px;
+    --hero-stage-top: 140px;
     --hero-stage-right: 42px;
     --hero-stage-bottom: 76px;
     --hero-stage-left: 42px;
+    --hero-wordmark-line-y: 0.06;
+    --hero-form-offset-y: clamp(96px, 16vh, 180px);
     --hero-panel-gap: clamp(16px, 2.2vw, 24px);
     --hero-panel-min-height: clamp(208px, 23vw, 256px);
     min-height: 920px;

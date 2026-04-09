@@ -2359,6 +2359,12 @@ async function setupNoticeBoardHero() {
   function applyHeroNoteLayout() {
     const stage = getHeroStageRect();
     const layoutPreset = getHeroLayoutPreset();
+    const wordmarkLineYValue = Number.parseFloat(
+      window.getComputedStyle(boardShell || hero).getPropertyValue("--hero-wordmark-line-y")
+    );
+    const wordmarkLineY = Number.isFinite(wordmarkLineYValue)
+      ? wordmarkLineYValue
+      : layoutPreset.lineY;
     let maxLogoRestZ = logoFrontStartZ;
     let maxBoardRestZ = boardFrontStartZ;
 
@@ -2389,7 +2395,7 @@ async function setupNoticeBoardHero() {
     const blockCenterY =
       stage.isSlotStage && noteRows.length > 1
         ? (stage.top + stage.bottom) / 2
-        : stage.centerY ?? stage.top - stage.height * layoutPreset.lineY;
+        : stage.centerY ?? stage.top - stage.height * wordmarkLineY;
     let noteIndex = 0;
 
     noteRows.forEach((row, rowIndex) => {
