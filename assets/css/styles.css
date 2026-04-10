@@ -262,6 +262,8 @@ body.images-hidden .editorial-card--stacked {
 
 .shop-soon {
   position: relative;
+  display: grid;
+  gap: clamp(28px, 4vw, 56px);
   overflow: hidden;
   border-radius: 40px;
   padding: clamp(22px, 3vw, 34px);
@@ -369,6 +371,20 @@ body.images-hidden .editorial-card--stacked {
   color: var(--ink-muted);
 }
 
+.page-top-eyebrow {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  justify-self: start;
+}
+
+.page-top-eyebrow--hero {
+  grid-column: 1 / -1;
+  align-self: start;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
 .section-head {
   display: grid;
   gap: 14px;
@@ -381,12 +397,15 @@ body.images-hidden .editorial-card--stacked {
 }
 
 .contact-intro {
+  display: grid;
+  gap: clamp(28px, 5vw, 56px);
   padding-top: 50px;
-  text-align: center;
 }
 
 .contact-intro .section-head {
   margin-inline: auto;
+  justify-items: center;
+  text-align: center;
 }
 
 .title-xl,
