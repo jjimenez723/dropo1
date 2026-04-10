@@ -1617,7 +1617,7 @@ function setupMultiStepForm() {
   }
 
   const steps = $$(".form-step", form);
-  const indicators = $$("[data-step-marker]");
+  const indicators = $$("[data-step-marker]", form);
   let currentStep = 0;
 
   form.addEventListener("input", (event) => {
@@ -1627,6 +1627,26 @@ function setupMultiStepForm() {
     }
   });
 
+  function getStepFields(stepIndex) {
+    return $$("input, select, textarea", steps[stepIndex]).filter((field) => !field.disabled);
+  }
+
+  function validateStep(stepIndex) {
+    const stepFields = getStepFields(stepIndex);
+    stepFields.forEach((field) => {
+      validateSimpleUrlField(field);
+    });
+
+    const firstInvalid = stepFields.find((field) => !field.checkValidity());
+    if (firstInvalid) {
+      renderStep(stepIndex);
+      firstInvalid.reportValidity();
+      return false;
+    }
+
+    return true;
+  }
+
   function renderStep(nextStep) {
     currentStep = Math.max(0, Math.min(nextStep, steps.length - 1));
     steps.forEach((step, index) => {
@@ -1635,7 +1655,13 @@ function setupMultiStepForm() {
       step.setAttribute("aria-hidden", String(!active));
     });
     indicators.forEach((marker, index) => {
-      marker.classList.toggle("is-active", index === currentStep);
+      const active = index === currentStep;
+      marker.classList.toggle("is-active", active);
+      if (active) {
+        marker.setAttribute("aria-current", "step");
+      } else {
+        marker.removeAttribute("aria-current");
+      }
     });
 
     const activeStep = steps[currentStep];
@@ -1656,17 +1682,7 @@ function setupMultiStepForm() {
 
     if (target.hasAttribute("data-next")) {
       event.preventDefault();
-      const currentStepFields = $$("input, select, textarea", steps[currentStep]).filter(
-        (field) => !field.disabled
-      );
-
-      currentStepFields.forEach((field) => {
-        validateSimpleUrlField(field);
-      });
-      const isValid = currentStepFields.every((field) => field.checkValidity());
-      if (!isValid) {
-        const firstInvalid = currentStepFields.find((field) => !field.checkValidity());
-        firstInvalid?.reportValidity();
+      if (!validateStep(currentStep)) {
         return;
       }
 
@@ -1685,6 +1701,23 @@ function setupMultiStepForm() {
 
   form.addEventListener("reset", () => {
     window.setTimeout(() => renderStep(0), 0);
+  });
+
+  indicators.forEach((marker, index) => {
+    marker.addEventListener("click", () => {
+      if (index <= currentStep) {
+        renderStep(index);
+        return;
+      }
+
+      for (let stepIndex = 0; stepIndex < index; stepIndex += 1) {
+        if (!validateStep(stepIndex)) {
+          return;
+        }
+      }
+
+      renderStep(index);
+    });
   });
 
   renderStep(0);

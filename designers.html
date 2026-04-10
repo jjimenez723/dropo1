@@ -72,10 +72,12 @@
             data-webhook-form="designer-intake"
             data-success-message="Your work has been received. We will review it with the artist and the idea first, then follow up with next steps."
           >
-            <div class="step-indicator" aria-hidden="true">
-              <span class="is-active" data-step-marker>Artist</span>
-              <span data-step-marker>Expression</span>
-              <span data-step-marker>Support</span>
+            <div class="step-indicator" aria-label="Designer submission steps">
+              <button class="is-active" type="button" data-step-marker aria-current="step">
+                Artist
+              </button>
+              <button type="button" data-step-marker>Expression</button>
+              <button type="button" data-step-marker>Support</button>
             </div>
 
             <section class="form-step is-active" aria-hidden="false">
