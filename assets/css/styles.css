@@ -18,6 +18,9 @@
   --radius-lg: 22px;
   --radius-md: 16px;
   --radius-sm: 12px;
+  --radius-button: 4px;
+  --radius-card: 4px;
+  --radius-input: 4px;
   --container: min(1180px, calc(100vw - 48px));
   --copy-width: 68ch;
   --nav-height: 92px;
@@ -442,7 +445,7 @@ body.images-hidden .editorial-card--stacked {
   justify-content: center;
   gap: 10px;
   min-height: 52px;
-  border-radius: 999px;
+  border-radius: var(--radius-button);
   padding: 0 24px;
   transition:
     transform 180ms ease,
@@ -778,7 +781,7 @@ body.images-hidden .editorial-card--stacked {
   width: 100%;
   max-width: var(--hero-panel-max-width);
   padding: 22px;
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   border: 1px solid rgb(var(--accent-rgb) / 0.24);
   background: rgba(255, 255, 255, 0.92);
   display: flex;
@@ -833,7 +836,7 @@ body.images-hidden .editorial-card--stacked {
   width: 100%;
   max-width: var(--hero-panel-max-width);
   padding: 22px;
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgb(var(--accent-rgb) / 0.24);
   display: flex;
@@ -865,7 +868,7 @@ body.images-hidden .editorial-card--stacked {
   grid-column: 1;
   width: 100%;
   min-height: 56px;
-  border-radius: 18px;
+  border-radius: var(--radius-input);
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: rgba(255, 255, 255, 0.9);
   padding: 0 18px;
@@ -967,7 +970,7 @@ body.is-dragging-notice-board {
 .field textarea,
 .field select {
   width: 100%;
-  border-radius: 18px;
+  border-radius: var(--radius-input);
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.86);
   padding: 16px 18px;
@@ -1109,7 +1112,7 @@ body.is-dragging-notice-board {
 .process-card,
 .testimonial,
 .contact-card {
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgb(var(--accent-rgb) / 0.24);
   box-shadow: var(--shadow-soft);
@@ -1480,7 +1483,7 @@ body.is-dragging-notice-board {
 
 .featured-banner {
   padding: 36px;
-  border-radius: 32px;
+  border-radius: var(--radius-card);
   background:
     radial-gradient(
       circle at 20% 18%,
@@ -1575,8 +1578,8 @@ body.is-dragging-notice-board {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 0;
-  justify-content: flex-start;
+  margin-top: auto;
+  justify-content: flex-end;
 }
 
 .contact-card__links a {
@@ -1588,7 +1591,7 @@ body.is-dragging-notice-board {
   justify-content: center;
   width: min(100%, 300px);
   padding: 18px 22px;
-  border-radius: 24px;
+  border-radius: var(--radius-button);
   border-color: rgba(0, 0, 0, 0.12);
   background:
     linear-gradient(
@@ -2040,7 +2043,7 @@ body.is-dragging-notice-board {
 
   .hero__subscribe-card,
   .hero-note-form {
-    border-radius: 24px;
+    border-radius: var(--radius-card);
   }
 
   .hero__headline,
@@ -2312,7 +2315,7 @@ body.is-dragging-notice-board {
   max-width: 420px;
   padding: 22px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 22px;
+  border-radius: var(--radius-card);
   background: #ffffff;
   box-shadow: none;
   display: flex;
